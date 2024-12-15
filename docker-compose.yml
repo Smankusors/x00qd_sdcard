@@ -1,0 +1,15 @@
+services:
+  x00qd_sdcard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - PATH=/root/bin:$PATH
+    privileged: true
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./bin:/root/bin
+      - ./patch:/root/patch
+      - ./work:/root/work
+      - /dev:/dev

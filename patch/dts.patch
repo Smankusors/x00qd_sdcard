@@ -1,0 +1,35 @@
+--- 01_dtbdump_Qualcomm_Technologies,_Inc._ARA-ER_SDM_636_PM660_+_PM660L_QRD.dts.bak	2024-12-15 15:13:02.185089904 +0700
++++ 01_dtbdump_Qualcomm_Technologies,_Inc._ARA-ER_SDM_636_PM660_+_PM660L_QRD.dts	2024-12-15 15:15:38.838356600 +0700
+@@ -14807,7 +14807,7 @@
+ 
+ 				vendor {
+ 					compatible = "android,vendor";
+-					dev = "/dev/block/platform/soc/c0c4000.sdhci/by-name/vendor";
++					dev = "/dev/block/platform/soc/c0c4000.sdhci/../c084000.sdhci/by-name/microsd_vendor";
+ 					type = "ext4";
+ 					mnt_flags = "ro,barrier=1,discard";
+ 					fsmgr_flags = "wait";
+@@ -14816,12 +14816,22 @@
+ 
+ 				system {
+ 					compatible = "android,system";
+-					dev = "/dev/block/platform/soc/c0c4000.sdhci/by-name/system";
++					dev = "/dev/block/platform/soc/c0c4000.sdhci/../c084000.sdhci/by-name/microsd_system";
+ 					type = "ext4";
+ 					mnt_flags = "ro,barrier=1,discard";
+ 					fsmgr_flags = "wait";
+ 					status = "ok";
+ 				};
++
++				cache {
++					compatible = "android,cache";
++					dev = "/dev/block/platform/soc/c0c4000.sdhci/by-name/cache";
++					type = "ext4";
++					mnt_point = "/vendor/internalcachesothatwecanbootfromsdcard";
++					mnt_flags = "ro,barrier=1,discard";
++					fsmgr_flags = "wait";
++					status = "ok";
++				};				
+ 			};
+ 		};
+ 	};
