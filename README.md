@@ -14,6 +14,7 @@
   - [4. Patch vendor image](#4-patch-vendor-image)
   - [5. Write system and vendor images to sdcard](#5-write-system-and-vendor-images-to-sdcard)
   - [6. Flash modified boot.img to the phone](#6-flash-modified-bootimg-to-the-phone)
+- [Acknowledgements](#acknowledgements)
 
 ## Disclaimer
 
@@ -115,3 +116,11 @@ fastboot reboot
 ```
 
 That's it! Now you can enjoy Android on your microSD card without fear of bricking your phone or overloading the internal storage. 😉
+
+## Acknowledgements
+
+Thanks for these projects that makes this project possible 🙏
+
+- https://github.com/xpirt/sdat2img
+- https://github.com/cfig/Android_boot_image_editor
+- https://github.com/PabloCastellano/extract-dtb
