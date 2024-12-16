@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 cd work
 
@@ -11,13 +12,13 @@ elif [ ${#zip_files[@]} -gt 1 ]; then
   exit 1
 fi
 TARGET_ZIP="${zip_files[0]}"
-  
+
 echo "Unzipping..."
-unzip "${TARGET_ZIP}" boot.img system.new.dat.br system.patch.dat system.transfer.list vendor.new.dat.br vendor.patch.dat vendor.transfer.list
+unzip -o "${TARGET_ZIP}" boot.img system.new.dat.br system.patch.dat system.transfer.list vendor.new.dat.br vendor.patch.dat vendor.transfer.list
 
 echo "Debrotling..."
-brotli -d system.new.dat.br
-brotli -d vendor.new.dat.br
+brotli --decompress --force system.new.dat.br
+brotli --decompress --force vendor.new.dat.br
 
 echo "Desparsing..."
 python3 /root/sdat2img-master/sdat2img.py system.transfer.list system.new.dat

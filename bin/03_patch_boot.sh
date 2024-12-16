@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 echo "Unpacking boot.img..."
 cp work/boot.img Android_boot_image_editor-master/boot.img
