@@ -38,9 +38,6 @@ parted "$DEVICE" --script \
 
 echo "Formatting partitions..."
 mkfs.ext4 "${DEVICE}3"
-mkfs.ext4 "${DEVICE}4"
-
-echo "Enabling encryption on microsd_userdata..."
-tune2fs -O encrypt "${DEVICE}4"
+mkfs.ext4 -O encrypt "${DEVICE}4"
 
 echo "Partitioning and formatting completed successfully on $DEVICE."
