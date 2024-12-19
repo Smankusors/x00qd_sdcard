@@ -12,6 +12,7 @@ RUN apt update \
     gcc \
     git \
     g++ \
+    f2fs-tools \
     lz4 \
     openjdk-17-jdk \
     parted \
