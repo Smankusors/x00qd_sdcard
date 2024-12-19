@@ -27,6 +27,8 @@
 
 This project is designed for the **Asus X00QD**, which features the Qualcomm Snapdragon 636 (SDM636) chipset. However, it could potentially work on other devices with similar SoCs, such as those based on **SDM630**, **SDM636**, or **SDM660** chipsets. Your mileage may vary.
 
+Currently, it doesn't work with stock ROMs. I have no idea why, and I have no plan to support it too.
+
 ## Background
 
 Because I was itching to try out the new Android without freaking out about my data, plus having a quick "undo" button seemed smart. Also, I'm kinda paranoid about wearing out my flash memory, and hey, it's way easier to swap out a microSD if things go sideways.
