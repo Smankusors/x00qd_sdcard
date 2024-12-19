@@ -36,8 +36,4 @@ parted "$DEVICE" --script \
   mkpart microsd_cache ext4 9439232s 9701375s \
   mkpart microsd_userdata ext4 9701376s 100%
 
-echo "Formatting partitions..."
-mkfs.ext4 "${DEVICE}3"
-mkfs.ext4 -O encrypt "${DEVICE}4"
-
-echo "Partitioning and formatting completed successfully on $DEVICE."
+echo "Done."
