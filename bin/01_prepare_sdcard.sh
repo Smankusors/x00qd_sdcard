@@ -22,7 +22,7 @@ fi
 echo "Current partition table for $DEVICE:"
 parted "$DEVICE" print
 
-read -p "Are you sure you want to partition and format $DEVICE? This will erase all data! (yes/no): " CONFIRM
+read -p "Are you sure you want to partition $DEVICE? This will erase all data! (yes/no): " CONFIRM
 if [[ "$CONFIRM" != "yes" ]]; then
   echo "Operation canceled."
   exit 0

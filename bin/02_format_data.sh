@@ -12,6 +12,12 @@ if [[ -z "$1" || -z "$2" ]]; then
   exit 1
 fi
 
+read -p "Are you sure you want to format $DEVICE? This will erase cache and user data! (yes/no): " CONFIRM
+if [[ "$CONFIRM" != "yes" ]]; then
+  echo "Operation canceled."
+  exit 0
+fi
+
 DEVICE="$1"
 FS="$2"
 
@@ -27,11 +33,11 @@ fi
 
 echo "Formatting partitions..."
 if [[ "$FS" == "f2fs" ]]; then
-  mkfs.f2fs "${DEVICE}3"
-  mkfs.f2fs -O encrypt "${DEVICE}4"
+  mkfs.f2fs -F "${DEVICE}3"
+  mkfs.f2fs -F -O encrypt "${DEVICE}4"
 elif [[ "$FS" == "ext4" ]]; then
-  mkfs.ext4 "${DEVICE}3"
-  mkfs.ext4 -O encrypt "${DEVICE}4"
+  mkfs.ext4 -F "${DEVICE}3"
+  mkfs.ext4 -F -O encrypt "${DEVICE}4"
 fi
 
 echo "Partitioning and formatting completed successfully on $DEVICE."
