@@ -36,8 +36,8 @@ if [[ "$FS" == "f2fs" ]]; then
   mkfs.f2fs -f "${DEVICE}3"
   mkfs.f2fs -f -O encrypt,verity "${DEVICE}4"
 elif [[ "$FS" == "ext4" ]]; then
-  mkfs.ext4 -F "${DEVICE}3"
-  mkfs.ext4 -F -O encrypt,extent,verity "${DEVICE}4"
+  mkfs.ext4 -F -O dir_nlink,extra_isize,has_journal,extent,uninit_bg "${DEVICE}3"
+  mkfs.ext4 -F -O 64bit,dir_nlink,encrypt,extent,extra_isize,has_journal,metadata_csum,project,quota,verity "${DEVICE}4"
 fi
 
 echo "Partitioning and formatting completed successfully on $DEVICE."
