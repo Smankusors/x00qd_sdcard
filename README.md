@@ -9,11 +9,12 @@
 - [Procedures](#procedures)
   - [0. Put the ROM zip to the work folder](#0-put-the-rom-zip-to-the-work-folder)
   - [1. Prepare the sdcard](#1-prepare-the-sdcard)
-  - [2. Extract zip](#2-extract-zip)
-  - [3. Patch boot.img](#3-patch-bootimg)
-  - [4. Patch vendor image](#4-patch-vendor-image)
-  - [5. Write system and vendor images to sdcard](#5-write-system-and-vendor-images-to-sdcard)
-  - [6. Flash modified boot.img to the phone](#6-flash-modified-bootimg-to-the-phone)
+  - [2. Format data](#2-format-data)
+  - [3. Extract zip](#3-extract-zip)
+  - [4. Patch boot.img](#4-patch-bootimg)
+  - [5. Patch vendor image](#5-patch-vendor-image)
+  - [6. Write system and vendor images to sdcard](#6-write-system-and-vendor-images-to-sdcard)
+  - [7. Flash modified boot.img to the phone](#7-flash-modified-bootimg-to-the-phone)
 - [Acknowledgements](#acknowledgements)
 
 ## Disclaimer
@@ -33,7 +34,7 @@ Currently, it doesn't work with stock ROMs. I have no idea why, and I have no pl
 
 Because I was itching to try out the new Android without freaking out about my data, plus having a quick "undo" button seemed smart. Also, I'm kinda paranoid about wearing out my flash memory, and hey, it's way easier to swap out a microSD if things go sideways.
 
-Though, I ended up losing all of my data once. 😭
+Though, I ended up losing all of my data twice. 😭
 
 ## Important Notes
 
@@ -86,31 +87,43 @@ Run the following command, replacing /dev/sdX with your microSD card's device pa
 ./runInDocker.sh 01_prepare_sdcard.sh /dev/sdX
 ```
 
-### 2. Extract zip
+### 2. Format data
 
 ```
-./runInDocker.sh 02_extract_zip.sh
+./runInDocker.sh 02_format_data.sh /dev/sdX ext4
 ```
 
-### 3. Patch boot.img
+or
 
 ```
-./runInDocker.sh 03_patch_boot.sh
+./runInDocker.sh 02_format_data.sh /dev/sdX f2fs
 ```
 
-### 4. Patch vendor image
+### 3. Extract zip
 
 ```
-./runInDocker.sh 04_patch_vendor.sh
+./runInDocker.sh 03_extract_zip.sh
 ```
 
-### 5. Write system and vendor images to sdcard
+### 4. Patch boot.img
 
 ```
-./runInDocker.sh 05_write_sdcard.sh /dev/sdX
+./runInDocker.sh 04_patch_boot.sh
 ```
 
-### 6. Flash modified boot.img to the phone
+### 5. Patch vendor image
+
+```
+./runInDocker.sh 05_patch_vendor.sh
+```
+
+### 6. Write system and vendor images to sdcard
+
+```
+./runInDocker.sh 06_write_sdcard.sh /dev/sdX
+```
+
+### 7. Flash modified boot.img to the phone
 
 ```
 fastboot flash boot work/boot.img
