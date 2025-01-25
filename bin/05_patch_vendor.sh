@@ -12,7 +12,9 @@ mount work/vendor.img $TMPDIR
 
 echo "Patching..."
 cp patch/fstab.qcom $TMPDIR/etc/fstab.qcom
-mkdir $TMPDIR/internalcachesothatwecanbootfromsdcard
+mkdir $TMPDIR/internalcachesothatwecanbootfromsdcard | true
+echo "/dev/block/platform/soc/c084000.sdhci/by-name/microsd_userdata u:object_r:userdata_block_device:s0" >> $TMPDIR/etc/selinux/vendor_file_contexts
+echo "/dev/block/platform/soc/c084000.sdhci/by-name/microsd_cache u:object_r:cache_block_device:s0" >> $TMPDIR/etc/selinux/vendor_file_contexts
 
 echo "Unmounting..."
 umount $TMPDIR
