@@ -14,7 +14,6 @@ RUN apt update \
     g++ \
     f2fs-tools \
     lz4 \
-    mkbootimg \
     openjdk-17-jdk \
     parted \
     p7zip-full \

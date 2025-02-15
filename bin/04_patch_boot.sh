@@ -79,7 +79,7 @@ echo "BOOT_DTB=$BOOT_DTB"
 echo "BOOT_OS_VERSION=$BOOT_OS_VERSION"
 echo "BOOT_OS_PATCH_LEVEL=$BOOT_OS_PATCH_LEVEL"
 
-mkbootimg \
+python3 Android_boot_image_editor-master/aosp/system/tools/mkbootimg/mkbootimg.py \
   --header_version 2 \
   --kernel Android_boot_image_editor-master/build/unzip_boot/kernel \
   --ramdisk "Android_boot_image_editor-master/${BOOT_RAMDISK}" \
