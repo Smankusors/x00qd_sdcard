@@ -41,7 +41,7 @@ echo "Concatenating device trees..."
 cat ${TMPDIR}/out/*.dtb > ${TMPDIR}/dtb
 
 echo "Appending patched device trees..."
-cat ${TMPDIR}/kernel ${TMPDIR}/dtb > Android_boot_image_editor-master/build/unzip_boot/kernel
+cat ${TMPDIR}/out/00_kernel ${TMPDIR}/dtb > Android_boot_image_editor-master/build/unzip_boot/kernel
 
 echo "Repacking boot.img..."
 getJSONValue() {
