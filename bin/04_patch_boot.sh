@@ -2,16 +2,16 @@
 set -e
 
 echo "Unpacking boot.img..."
-cp work/boot.img Android_boot_image_editor-master/boot.img
-./Android_boot_image_editor-master/gradlew -p Android_boot_image_editor-master unpack
+cp work/boot.img Android_boot_image_editor/boot.img
+./Android_boot_image_editor/gradlew -p Android_boot_image_editor unpack
 
 echo "Extracting device trees..."
 TMPDIR="$(mktemp -d)"
 echo "TMPDIR=$TMPDIR"
-cp Android_boot_image_editor-master/build/unzip_boot/kernel ${TMPDIR}/kernel
-python3 extract-dtb-master/extract_dtb/extract_dtb.py -o ${TMPDIR}/out ${TMPDIR}/kernel
+cp Android_boot_image_editor/build/unzip_boot/kernel ${TMPDIR}/kernel
+python3 extract-dtb/extract_dtb/extract_dtb.py -o ${TMPDIR}/out ${TMPDIR}/kernel
 
-KERNEL_VERSION=$(cat Android_boot_image_editor-master/build/unzip_boot/kernel_version.txt)
+KERNEL_VERSION=$(cat Android_boot_image_editor/build/unzip_boot/kernel_version.txt)
 echo "Kernel version: $KERNEL_VERSION"
 if [[ $KERNEL_VERSION == "4.4"* ]]; then
   for file in ${TMPDIR}/out/*.dtb; do
@@ -41,7 +41,7 @@ echo "Concatenating device trees..."
 cat ${TMPDIR}/out/*.dtb > ${TMPDIR}/dtb
 
 echo "Appending patched device trees..."
-cat ${TMPDIR}/out/00_kernel ${TMPDIR}/dtb > Android_boot_image_editor-master/build/unzip_boot/kernel
+cat ${TMPDIR}/out/00_kernel ${TMPDIR}/dtb > Android_boot_image_editor/build/unzip_boot/kernel
 
 echo "Repacking boot.img..."
 getJSONValue() {
@@ -49,7 +49,7 @@ getJSONValue() {
 import json
 import sys
 try:
-  with open('Android_boot_image_editor-master/build/unzip_boot/boot.json') as f:
+  with open('Android_boot_image_editor/build/unzip_boot/boot.json') as f:
     print(json.load(f)$1)
 except Exception as e:
   print(f"Error: Could not find key $1 in boot.json", file=sys.stderr)
@@ -79,10 +79,10 @@ echo "BOOT_DTB=$BOOT_DTB"
 echo "BOOT_OS_VERSION=$BOOT_OS_VERSION"
 echo "BOOT_OS_PATCH_LEVEL=$BOOT_OS_PATCH_LEVEL"
 
-python3 Android_boot_image_editor-master/aosp/system/tools/mkbootimg/mkbootimg.py \
+python3 Android_boot_image_editor/aosp/system/tools/mkbootimg/mkbootimg.py \
   --header_version 2 \
-  --kernel Android_boot_image_editor-master/build/unzip_boot/kernel \
-  --ramdisk "Android_boot_image_editor-master/${BOOT_RAMDISK}" \
+  --kernel Android_boot_image_editor/build/unzip_boot/kernel \
+  --ramdisk "Android_boot_image_editor/${BOOT_RAMDISK}" \
   --base "${BOOT_BASE}" \
   --second_offset "${BOOT_SECOND_OFFSET}" \
   --cmdline "${BOOT_CMDLINE}" \
