@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+if [[ "$1" == "--rw" ]]; then
+  DT_MOUNT_MODE="rw"
+else
+  DT_MOUNT_MODE="ro"
+fi
+
 echo "Unpacking boot.img..."
 cp work/boot.img Android_boot_image_editor/boot.img
 ./Android_boot_image_editor/gradlew -p Android_boot_image_editor unpack
@@ -20,11 +26,21 @@ if [[ $KERNEL_VERSION == "4.4"* ]]; then
       rm $file
     fi
   done
-  echo "Using dts_4.4.patch"
-  cp patch/dts_4.4.patch ${TMPDIR}/dts.patch
+  if [[ "$DT_MOUNT_MODE" == "rw" ]]; then
+    echo "Using dts 4.4 rw patch"
+    cp patch/dts_4.4_rw.patch ${TMPDIR}/dts.patch
+  else
+    echo "Using dts 4.4 ro patch"
+    cp patch/dts_4.4.patch ${TMPDIR}/dts.patch
+  fi
 elif [[ $KERNEL_VERSION == "4.19"* ]]; then
-  echo "Using dts_4.19.patch"
-  cp patch/dts_4.19.patch ${TMPDIR}/dts.patch
+  if [[ "$DT_MOUNT_MODE" == "rw" ]]; then
+    echo "Using dts 4.19 rw patch"
+    cp patch/dts_4.19_rw.patch ${TMPDIR}/dts.patch
+  else
+    echo "Using dts 4.19 ro patch"
+    cp patch/dts_4.19.patch ${TMPDIR}/dts.patch
+  fi
 else
   echo "Error: Unsupported kernel version $KERNEL_VERSION"
   exit 1
