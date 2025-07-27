@@ -21,8 +21,8 @@ brotli --decompress --force system.new.dat.br
 brotli --decompress --force vendor.new.dat.br
 
 echo "Desparsing..."
-python3 /root/sdat2img-master/sdat2img.py system.transfer.list system.new.dat
-python3 /root/sdat2img-master/sdat2img.py vendor.transfer.list vendor.new.dat vendor.img
+python3 /root/sdat2img/sdat2img.py system.transfer.list system.new.dat
+python3 /root/sdat2img/sdat2img.py vendor.transfer.list vendor.new.dat vendor.img
 
 echo "Cleaning up..."
 rm system.new* system.patch.dat system.transfer.list
