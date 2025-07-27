@@ -9,9 +9,9 @@
 - [Procedures](#procedures)
   - [0. Put the ROM zip to the work folder](#0-put-the-rom-zip-to-the-work-folder)
   - [1. Prepare the sdcard](#1-prepare-the-sdcard)
-  - [2. Format data](#2-format-data)
-  - [3. Extract zip](#3-extract-zip)
-  - [4. Patch boot.img](#4-patch-bootimg)
+  - [2. Extract zip](#2-extract-zip)
+  - [3. Patch boot.img](#3-patch-bootimg)
+  - [4. Format data](#4-format-data)
   - [5. Patch vendor image](#5-patch-vendor-image)
   - [6. Write system and vendor images to sdcard](#6-write-system-and-vendor-images-to-sdcard)
   - [7. Flash modified boot.img to the phone](#7-flash-modified-bootimg-to-the-phone)
@@ -87,28 +87,28 @@ Run the following command, replacing /dev/sdX with your microSD card's device pa
 ./runInDocker.sh 01_prepare_sdcard.sh /dev/sdX
 ```
 
-### 2. Format data
+### 2. Extract zip
 
 ```
-./runInDocker.sh 02_format_data.sh /dev/sdX ext4
+./runInDocker.sh 02_extract_zip.sh
+```
+
+### 3. Patch boot.img
+
+```
+./runInDocker.sh 03_patch_boot.sh
+```
+
+### 4. Format data
+
+```
+./runInDocker.sh 04_format_data.sh /dev/sdX ext4
 ```
 
 or
 
 ```
-./runInDocker.sh 02_format_data.sh /dev/sdX f2fs
-```
-
-### 3. Extract zip
-
-```
-./runInDocker.sh 03_extract_zip.sh
-```
-
-### 4. Patch boot.img
-
-```
-./runInDocker.sh 04_patch_boot.sh
+./runInDocker.sh 04_format_data.sh /dev/sdX f2fs
 ```
 
 ### 5. Patch vendor image
