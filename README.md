@@ -18,6 +18,7 @@
   - [6. Write system and vendor images to sdcard](#6-write-system-and-vendor-images-to-sdcard)
   - [7. Flash modified boot.img to the phone](#7-flash-modified-bootimg-to-the-phone)
 - [U-Boot Bootloader](#u-boot-bootloader)
+- [Debugging Early Android Boot Issues](#debugging-early-android-boot-issues)
 - [Acknowledgements](#acknowledgements)
 
 ## Disclaimer
@@ -170,6 +171,24 @@ To get U-Boot to automatically boot Android from the microSD, we can replace ste
 ```
 ./runInDocker.sh 04_write_extlinux_boot_config.sh /dev/sdX
 ```
+
+## Debugging Early Android Boot Issues
+
+This repo includes an optional debugging feature that can help diagnose early boot problems. You can enable debugging by executing steps with the following parameters:
+
+```
+./runInDocker.sh 04_patch_boot.sh --rw
+./runInDocker.sh 04_write_extlinux_boot_config.sh /dev/sdX --rw
+./runInDocker.sh 05_patch_vendor.sh --with-debug
+```
+
+It will write kernel logs and logcat to `/vendor/dmesg.log` and `/vendor/logcat.log` on microSD respectively.
+
+> [!IMPORTANT]
+> This will only work if the Android reaches **early init** phase. If no logs appear, probably the failure occurs before that stage.
+
+> [!NOTE]
+> Unfortunately, this doesn't work with the stock ROM yet.
 
 ## Acknowledgements
 
