@@ -28,4 +28,10 @@ echo "Cleaning up..."
 rm system.new* system.patch.dat system.transfer.list
 rm vendor.new* vendor.patch.dat vendor.transfer.list
 
+cd ..
+
+echo "Unpacking boot.img..."
+cp work/boot.img Android_boot_image_editor/boot.img
+./Android_boot_image_editor/gradlew -p Android_boot_image_editor unpack
+
 echo "Done."

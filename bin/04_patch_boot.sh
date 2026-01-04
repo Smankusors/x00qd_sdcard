@@ -7,10 +7,6 @@ else
   DT_MOUNT_MODE="ro"
 fi
 
-echo "Unpacking boot.img..."
-cp work/boot.img Android_boot_image_editor/boot.img
-./Android_boot_image_editor/gradlew -p Android_boot_image_editor unpack
-
 echo "Extracting device trees..."
 TMPDIR="$(mktemp -d)"
 echo "TMPDIR=$TMPDIR"
