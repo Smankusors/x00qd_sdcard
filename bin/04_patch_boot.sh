@@ -56,29 +56,20 @@ echo "Appending patched device trees..."
 cat ${TMPDIR}/out/00_kernel ${TMPDIR}/dtb > Android_boot_image_editor/build/unzip_boot/kernel
 
 echo "Repacking boot.img..."
-getJSONValue() {
-  python3 - <<PYTHON
-import json
-import sys
-try:
-  with open('Android_boot_image_editor/build/unzip_boot/boot.json') as f:
-    print(json.load(f)$1)
-except Exception as e:
-  print(f"Error: Could not find key $1 in boot.json", file=sys.stderr)
-  raise e
-PYTHON
+getBootImageJSONValue() {
+  jq -r "$1" ~/Android_boot_image_editor/build/unzip_boot/boot.json
 }
-BOOT_RAMDISK=$(getJSONValue "['ramdisk']['file']")
-BOOT_BASE=$(getJSONValue "['info']['loadBase']")
-BOOT_SECOND_OFFSET=$(getJSONValue "['secondBootloader']['loadOffset']" || echo 0)
-BOOT_CMDLINE=$(getJSONValue "['info']['cmdline']")
-BOOT_KERNEL_OFFSET=$(getJSONValue "['kernel']['loadOffset']")
-BOOT_RAMDISK_OFFSET=$(getJSONValue "['ramdisk']['loadOffset']")
-BOOT_TAGS_OFFSET=$(getJSONValue "['info']['tagsOffset']")
-BOOT_PAGESIZE=$(getJSONValue "['info']['pageSize']")
+BOOT_RAMDISK=$(getBootImageJSONValue '.ramdisk.file')
+BOOT_BASE=$(getBootImageJSONValue '.info.loadBase')
+BOOT_SECOND_OFFSET=$(getBootImageJSONValue '.secondBootloader.loadOffset' || echo 0)
+BOOT_CMDLINE=$(getBootImageJSONValue '.info.cmdline')
+BOOT_KERNEL_OFFSET=$(getBootImageJSONValue '.kernel.loadOffset')
+BOOT_RAMDISK_OFFSET=$(getBootImageJSONValue '.ramdisk.loadOffset')
+BOOT_TAGS_OFFSET=$(getBootImageJSONValue '.info.tagsOffset')
+BOOT_PAGESIZE=$(getBootImageJSONValue '.info.pageSize')
 BOOT_DTB="${TMPDIR}/dtb"
-BOOT_OS_VERSION=$(getJSONValue "['info']['osVersion']")
-BOOT_OS_PATCH_LEVEL=$(getJSONValue "['info']['osPatchLevel']")
+BOOT_OS_VERSION=$(getBootImageJSONValue '.info.osVersion')
+BOOT_OS_PATCH_LEVEL=$(getBootImageJSONValue '.info.osPatchLevel')
 echo "BOOT_RAMDISK=$BOOT_RAMDISK"
 echo "BOOT_BASE=$BOOT_BASE"
 echo "BOOT_SECOND_OFFSET=$BOOT_SECOND_OFFSET"
