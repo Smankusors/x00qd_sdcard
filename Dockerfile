@@ -13,6 +13,7 @@ RUN apt update \
     git \
     g++ \
     f2fs-tools \
+    jq \
     lz4 \
     openjdk-17-jdk \
     parted \

@@ -1,0 +1,41 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	fragment@0 {
+		target-path = "/firmware/android";
+		__overlay__ {
+			fstab {
+				compatible = "android,fstab";
+
+				vendor {
+					compatible = "android,vendor";
+					dev = "/dev/block/platform/soc/c0c4000.sdhci/../c084000.sdhci/by-name/microsd_vendor";
+					type = "ext4";
+					mnt_flags = "ro,barrier=1,discard";
+					fsmgr_flags = "wait";
+					status = "ok";
+				};
+
+				system {
+					compatible = "android,system";
+					dev = "/dev/block/platform/soc/c0c4000.sdhci/../c084000.sdhci/by-name/microsd_system";
+					type = "ext4";
+					mnt_flags = "ro,barrier=1,discard";
+					fsmgr_flags = "wait";
+					status = "ok";
+				};
+
+				cache {
+					compatible = "android,cache";
+					dev = "/dev/block/platform/soc/c0c4000.sdhci/by-name/cache";
+					type = "ext4";
+					mnt_point = "/vendor/internalcachesothatwecanbootfromsdcard";
+					mnt_flags = "ro,barrier=1,discard";
+					fsmgr_flags = "wait";
+					status = "ok";
+				};
+			};
+		};
+	};
+};

@@ -1,0 +1,17 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	fragment@0 {
+		target-path = "/firmware/android/fstab";
+		__overlay__ {
+			vendor {
+				mnt_flags = "rw,barrier=1,discard";
+			};
+
+			system {
+				mnt_flags = "rw,barrier=1,discard";
+			};
+		};
+	};
+};

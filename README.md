@@ -11,7 +11,9 @@
   - [1. Prepare the sdcard](#1-prepare-the-sdcard)
   - [2. Extract zip](#2-extract-zip)
   - [3. Format data](#3-format-data)
-  - [4. Patch boot.img](#4-patch-bootimg)
+  - [4. Patch boot.img or write extlinux boot config](#4-patch-bootimg-or-write-extlinux-boot-config)
+    - [Patch boot.img (stock bootloader)](#patch-bootimg-stock-bootloader)
+    - [Or write extlinux config (U-Boot or other bootloaders)](#or-write-extlinux-config-u-boot-or-other-bootloaders)
   - [5. Patch vendor image](#5-patch-vendor-image)
   - [6. Write system and vendor images to sdcard](#6-write-system-and-vendor-images-to-sdcard)
   - [7. Flash modified boot.img to the phone](#7-flash-modified-bootimg-to-the-phone)
@@ -105,10 +107,20 @@ or
 ./runInDocker.sh 03_format_data.sh /dev/sdX f2fs
 ```
 
-### 4. Patch boot.img
+### 4. Patch boot.img or write extlinux boot config
+
+Choose boot method:
+
+#### Patch boot.img (stock bootloader)
 
 ```
 ./runInDocker.sh 04_patch_boot.sh
+```
+
+#### Or write extlinux config (U-Boot or other bootloaders)
+
+```
+./runInDocker.sh 04_write_extlinux_boot_config.sh /dev/sdX
 ```
 
 ### 5. Patch vendor image

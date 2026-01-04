@@ -1,0 +1,11 @@
+DEFAULT android
+TIMEOUT 5
+PROMPT 1
+
+LABEL android
+        MENU LABEL Android Boot
+        LINUX /boot/kernel
+        INITRD /boot/ramdisk.img.gz
+        FDT /boot/dtb
+        FDTOVERLAYS [FDTOVERLAYS]
+        APPEND [CMDLINE]
