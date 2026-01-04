@@ -1,4 +1,4 @@
-FROM ubuntu:noble-20251013
+FROM debian:trixie-20251229
 
 WORKDIR /root
 
@@ -15,7 +15,8 @@ RUN apt update \
     f2fs-tools \
     jq \
     lz4 \
-    openjdk-17-jdk \
+    mkbootimg \
+    openjdk-21-jdk \
     parted \
     p7zip-full \
     python-is-python3 \
@@ -25,6 +26,16 @@ RUN apt update \
     unzip \
     xz-utils \
     zlib1g-dev \
+    \
+#   u-boot cross compile dependencies
+    bison \
+    flex \
+    gcc-aarch64-linux-gnu \
+    libgnutls28-dev \
+    libssl-dev \
+    make \
+    xxd \
+    \
   && curl -L https://github.com/xpirt/sdat2img/archive/b432c988a412c06ff24d196132e354712fc18929.tar.gz | tar -xzvf - \
   && mv sdat2img-b432c988a412c06ff24d196132e354712fc18929 sdat2img \
   && curl -L https://github.com/cfig/Android_boot_image_editor/archive/c82f1d98c003b82c8783faa424c85becf5e61bab.tar.gz | tar -xzvf - \

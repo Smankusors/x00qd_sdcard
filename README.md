@@ -17,6 +17,7 @@
   - [5. Patch vendor image](#5-patch-vendor-image)
   - [6. Write system and vendor images to sdcard](#6-write-system-and-vendor-images-to-sdcard)
   - [7. Flash modified boot.img to the phone](#7-flash-modified-bootimg-to-the-phone)
+- [U-Boot Bootloader](#u-boot-bootloader)
 - [Acknowledgements](#acknowledgements)
 
 ## Disclaimer
@@ -144,6 +145,32 @@ fastboot reboot
 
 That's it! Now you can enjoy Android on your microSD card without fear of bricking your phone or overloading the internal storage. 😉
 
+## U-Boot Bootloader
+
+If you want to multi-boot with postmarketOS with just swapping the microSD, you can opt to use U-Boot bootloader instead of the stock one.
+
+> [!IMPORTANT]
+> For encrypted storage to work, U-Boot's boot.img metadata must match the installed Android OS. For more information, please check [Android Keymaster Issue on Qualcomm Devices](https://wiki.postmarketos.org/wiki/Category:Bootloaders/Keymaster)
+
+To build U-Boot bootloader, you need to run `02_extract_zip.sh` first to extract the boot.img metadata, and then you can just build with this simple command:
+
+```
+./runInDocker.sh 07_build_uboot.sh
+```
+
+It will compile and generate `work/u-boot.img` file that you can flash to your phone with:
+
+```
+fastboot flash boot work/u-boot.img
+fastboot reboot
+```
+
+To get U-Boot to automatically boot Android from the microSD, we can replace step 4 of patching boot.img with writing extlinux boot config to the cache partition of the microSD card:
+
+```
+./runInDocker.sh 04_write_extlinux_boot_config.sh /dev/sdX
+```
+
 ## Acknowledgements
 
 Thanks for these projects that makes this project possible 🙏
@@ -151,3 +178,4 @@ Thanks for these projects that makes this project possible 🙏
 - https://github.com/xpirt/sdat2img
 - https://github.com/cfig/Android_boot_image_editor
 - https://github.com/PabloCastellano/extract-dtb
+- https://github.com/sdm660-mainline/u-boot
