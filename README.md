@@ -79,7 +79,11 @@ Ensure the ROM zip contains the following files:
 
 * boot.img
 * system.new.dat.br
+* system.transfer.list
 * vendor.new.dat.br
+* vendor.transfer.list
+
+Place the zip into the `work/` directory.
 
 ### 1. Prepare the sdcard
 
