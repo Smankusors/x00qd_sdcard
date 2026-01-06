@@ -4,26 +4,27 @@ WORKDIR /root
 
 RUN apt update \
   && apt install -y \
-    android-sdk-libsparse-utils \
     brotli \
     curl \
     device-tree-compiler \
-    erofs-utils \
-    gcc \
     git \
-    g++ \
     f2fs-tools \
     jq \
-    lz4 \
     mkbootimg \
-    openjdk-21-jdk \
     parted \
-    p7zip-full \
-    python-is-python3 \
     python3 \
     pv \
-    udev \
     unzip \
+    \
+#   Android_boot_image_editor dependencies
+    android-sdk-libsparse-utils \
+    erofs-utils \
+    g++ \
+    gcc \
+    lz4 \
+    openjdk-21-jdk \
+    p7zip-full \
+    python-is-python3 \
     xz-utils \
     zlib1g-dev \
     \
