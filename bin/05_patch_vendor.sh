@@ -16,9 +16,13 @@ if [[ "$1" == "--with-debug" ]]; then
 fi
 
 echo "Patching fstab.qcom..."
+cp $TMPDIR/etc/fstab.qcom $TMPDIR/etc/fstab.qcom.bak
+chcon --reference=$TMPDIR/etc/fstab.qcom $TMPDIR/etc/fstab.qcom.bak
 sed -i '/c084000.sdhci/d' $TMPDIR/etc/fstab.qcom
 sed -i 's/\/dev\/block\/bootdevice\/by-name\/userdata/\/dev\/block\/platform\/soc\/c084000.sdhci\/by-name\/microsd_userdata/g' $TMPDIR/etc/fstab.qcom
 sed -i 's/\/dev\/block\/bootdevice\/by-name\/cache/\/dev\/block\/platform\/soc\/c084000.sdhci\/by-name\/microsd_cache/g' $TMPDIR/etc/fstab.qcom
+chcon --reference=$TMPDIR/etc/fstab.qcom.bak $TMPDIR/etc/fstab.qcom
+rm $TMPDIR/etc/fstab.qcom.bak
 
 echo "mkdir $TMPDIR/internalcachesothatwecanbootfromsdcard..."
 mkdir $TMPDIR/internalcachesothatwecanbootfromsdcard | true
