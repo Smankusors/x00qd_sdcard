@@ -12,4 +12,5 @@ services:
       - ./bin:/root/bin
       - ./patch:/root/patch
       - ./work:/root/work
+      - ./work/unzip_boot:/root/Android_boot_image_editor/build/unzip_boot
       - /dev:/dev
