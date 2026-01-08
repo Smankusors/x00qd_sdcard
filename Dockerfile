@@ -8,6 +8,7 @@ RUN apt update \
     curl \
     device-tree-compiler \
     git \
+    e2fsprogs \
     f2fs-tools \
     jq \
     mkbootimg \
