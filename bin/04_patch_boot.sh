@@ -85,7 +85,7 @@ echo "BOOT_OS_PATCH_LEVEL=$BOOT_OS_PATCH_LEVEL"
 python3 Android_boot_image_editor/aosp/system/tools/mkbootimg/mkbootimg.py \
   --header_version 2 \
   --kernel Android_boot_image_editor/build/unzip_boot/kernel \
-  --ramdisk "Android_boot_image_editor/${BOOT_RAMDISK}" \
+  --ramdisk "${BOOT_RAMDISK}" \
   --base "${BOOT_BASE}" \
   --second_offset "${BOOT_SECOND_OFFSET}" \
   --cmdline "${BOOT_CMDLINE}" \
