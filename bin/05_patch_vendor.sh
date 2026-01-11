@@ -16,21 +16,29 @@ if [[ "$1" == "--with-debug" ]]; then
 fi
 
 echo "Patching fstab.qcom..."
-cp $TMPDIR/etc/fstab.qcom $TMPDIR/etc/fstab.qcom.bak
-chcon --reference=$TMPDIR/etc/fstab.qcom $TMPDIR/etc/fstab.qcom.bak
-sed -i '/c084000.sdhci/d' $TMPDIR/etc/fstab.qcom
-sed -i 's/\/dev\/block\/bootdevice\/by-name\/userdata/\/dev\/block\/platform\/soc\/c084000.sdhci\/by-name\/microsd_userdata/g' $TMPDIR/etc/fstab.qcom
-sed -i 's/\/dev\/block\/bootdevice\/by-name\/cache/\/dev\/block\/platform\/soc\/c084000.sdhci\/by-name\/microsd_cache/g' $TMPDIR/etc/fstab.qcom
-chcon --reference=$TMPDIR/etc/fstab.qcom.bak $TMPDIR/etc/fstab.qcom
-rm $TMPDIR/etc/fstab.qcom.bak
+FSTABQCOMFILE=$TMPDIR/etc/fstab.qcom
+cp $FSTABQCOMFILE $FSTABQCOMFILE.bak
+chcon --reference=$FSTABQCOMFILE $FSTABQCOMFILE.bak
+sed -i '/c084000.sdhci/d' $FSTABQCOMFILE
+sed -i 's/\/dev\/block\/bootdevice\/by-name\/userdata/\/dev\/block\/platform\/soc\/c084000.sdhci\/by-name\/microsd_userdata/g' $FSTABQCOMFILE
+sed -i 's/\/dev\/block\/bootdevice\/by-name\/cache/\/dev\/block\/platform\/soc\/c084000.sdhci\/by-name\/microsd_cache/g' $FSTABQCOMFILE
+chcon --reference=$FSTABQCOMFILE.bak $FSTABQCOMFILE
+rm $FSTABQCOMFILE.bak
 
 echo "mkdir $TMPDIR/internalcachesothatwecanbootfromsdcard..."
 mkdir $TMPDIR/internalcachesothatwecanbootfromsdcard | true
 
 echo "Patching vendor_file_contexts..."
-echo "/dev/block/platform/soc/c084000.sdhci/by-name/microsd_system u:object_r:system_block_device:s0" >> $TMPDIR/etc/selinux/vendor_file_contexts
-echo "/dev/block/platform/soc/c084000.sdhci/by-name/microsd_cache u:object_r:cache_block_device:s0" >> $TMPDIR/etc/selinux/vendor_file_contexts
-echo "/dev/block/platform/soc/c084000.sdhci/by-name/microsd_userdata u:object_r:userdata_block_device:s0" >> $TMPDIR/etc/selinux/vendor_file_contexts
+VENDORFILECONTEXTSFILE=$TMPDIR/etc/selinux/vendor_file_contexts
+cp $VENDORFILECONTEXTSFILE $VENDORFILECONTEXTSFILE.bak
+chcon --reference=$VENDORFILECONTEXTSFILE $VENDORFILECONTEXTSFILE.bak
+sed -i 's|^/dev/block/mmcblk1[[:space:]]\+u:object_r:sd_device:s0$|/dev/block/mmcblk1 u:object_r:root_block_device:s0|' $VENDORFILECONTEXTSFILE
+sed -i '/^\/dev\/block\/mmcblk1p1[[:space:]]/d' $VENDORFILECONTEXTSFILE
+echo "/dev/block/platform/soc/c084000.sdhci/by-name/microsd_system u:object_r:system_block_device:s0" >> $VENDORFILECONTEXTSFILE
+echo "/dev/block/platform/soc/c084000.sdhci/by-name/microsd_cache u:object_r:cache_block_device:s0" >> $VENDORFILECONTEXTSFILE
+echo "/dev/block/platform/soc/c084000.sdhci/by-name/microsd_userdata u:object_r:userdata_block_device:s0" >> $VENDORFILECONTEXTSFILE
+chcon --reference=$VENDORFILECONTEXTSFILE.bak $VENDORFILECONTEXTSFILE
+rm $VENDORFILECONTEXTSFILE.bak
 
 echo "Unmounting..."
 umount $TMPDIR
