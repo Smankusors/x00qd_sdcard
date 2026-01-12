@@ -15,4 +15,4 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-docker compose run --rm x00qd_sdcard "$1"
+docker compose run --rm x00qd_sdcard $@
