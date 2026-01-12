@@ -1,6 +1,7 @@
 FROM debian:trixie-20251229
 
 WORKDIR /root
+ENV PATH=/root/bin:$PATH
 
 RUN apt update \
   && apt install -y \

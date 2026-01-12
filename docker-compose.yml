@@ -3,8 +3,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    environment:
-      - PATH=/root/bin:$PATH
     image: ghcr.io/smankusors/x00qd_sdcard:main
     privileged: true
     stdin_open: true
