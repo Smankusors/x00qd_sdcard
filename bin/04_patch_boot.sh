@@ -61,7 +61,7 @@ getBootImageJSONValue() {
 }
 BOOT_RAMDISK=$(getBootImageJSONValue '.ramdisk.file')
 BOOT_BASE=$(getBootImageJSONValue '.info.loadBase')
-BOOT_SECOND_OFFSET=$(getBootImageJSONValue '.secondBootloader.loadOffset' || echo 0)
+BOOT_SECOND_OFFSET=$(getBootImageJSONValue '.secondBootloader.loadOffset // 0')
 BOOT_CMDLINE=$(getBootImageJSONValue '.info.cmdline')
 BOOT_KERNEL_OFFSET=$(getBootImageJSONValue '.kernel.loadOffset')
 BOOT_RAMDISK_OFFSET=$(getBootImageJSONValue '.ramdisk.loadOffset')
