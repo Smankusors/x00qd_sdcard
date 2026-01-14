@@ -16,6 +16,7 @@ RUN apt update \
     parted \
     python3 \
     pv \
+    udevadm \
     unzip \
     \
 #   Android_boot_image_editor dependencies
