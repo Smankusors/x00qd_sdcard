@@ -1,16 +1,12 @@
 #!/bin/bash
+set -e
 
-# Check if a script name is provided
 if [ -z "$1" ]; then
   echo "No script name provided."
+  echo
   echo "Available scripts in the bin folder:"
 
-  # Check if the bin folder exists and list scripts
-  if [ -d "./bin" ]; then
-    ls -1 "./bin"
-  else
-    echo "Error: '$BIN_FOLDER' folder does not exist or cannot be accessed."
-  fi
+  ls -1 "./bin"
 
   exit 1
 fi
