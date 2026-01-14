@@ -1,0 +1,7 @@
+BOARD_BOOTIMAGE_PARTITION_SIZE=67108864   #  64 MB
+BOARD_CACHEIMAGE_PARTITION_SIZE=134217728 # 128 MB
+
+select_dtb() {
+  # if the directory contains many dtb, select first one
+  ls $1/*.dtb | head -n 1
+}

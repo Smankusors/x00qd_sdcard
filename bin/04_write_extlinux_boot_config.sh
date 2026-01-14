@@ -14,6 +14,8 @@ if [[ -z "$1" ]]; then
   exit 1
 fi
 
+source work/config
+
 DEVICE="$1"
 
 if [[ ! -b "$DEVICE" ]]; then
@@ -30,8 +32,8 @@ fi
 BOOTMOUNTDIR="$(mktemp -d)"
 echo "BOOTMOUNTDIR=$BOOTMOUNTDIR"
 
-echo "Mounting ${DEVICE}3 partition..."
-mount ${DEVICE}3 "$BOOTMOUNTDIR"
+echo "Mounting ${DEVICE}1 partition..."
+mount ${DEVICE}1 "$BOOTMOUNTDIR"
 
 echo "Setting up folder structure..."
 mkdir -p "$BOOTMOUNTDIR/boot"
@@ -64,7 +66,7 @@ echo "Extracting and copying device tree blob..."
 TEMPDTBDIR="$(mktemp -d)"
 echo "TEMPDTBDIR=$TEMPDTBDIR"
 python3 extract-dtb/extract_dtb/extract_dtb.py -o ${TEMPDTBDIR} Android_boot_image_editor/build/unzip_boot/kernel
-DTBFILE=$(ls ${TEMPDTBDIR}/*.dtb | head -n 1)
+DTBFILE=$(select_dtb $TEMPDTBDIR)
 echo "Using DTB file: $DTBFILE"
 cp "$DTBFILE" "$BOOTMOUNTDIR/boot/dtb"
 

@@ -1,0 +1,4 @@
+source config/default
+
+EMMC_ADDR=c0c4000.sdhci
+MICROSD_ADDR=c084000.sdhci

@@ -7,6 +7,8 @@ else
   DT_MOUNT_MODE="ro"
 fi
 
+source work/config
+
 echo "Extracting device trees..."
 TMPDIR="$(mktemp -d)"
 echo "TMPDIR=$TMPDIR"
@@ -15,10 +17,7 @@ python3 extract-dtb/extract_dtb/extract_dtb.py -o $TMPDIR/out $TMPDIR/kernel
 
 echo "Patching device trees..."
 for file in $TMPDIR/out/*.dtb; do
-  if [[ $(strings $file | grep -c "ARA-ER") -eq 0 ]]; then
-    echo "Removing $file..."
-    rm $file
-  elif [[ "$DT_MOUNT_MODE" == "rw" ]]; then
+  if [[ "$DT_MOUNT_MODE" == "rw" ]]; then
     fdtoverlay -i $file -o $file patch/fstab-microsd.dtbo patch/fstab-microsd-rw.dtbo
   else
     fdtoverlay -i $file -o $file patch/fstab-microsd.dtbo
@@ -43,7 +42,7 @@ BOOT_KERNEL_OFFSET=$(getBootImageJSONValue '.kernel.loadOffset')
 BOOT_RAMDISK_OFFSET=$(getBootImageJSONValue '.ramdisk.loadOffset')
 BOOT_TAGS_OFFSET=$(getBootImageJSONValue '.info.tagsOffset')
 BOOT_PAGESIZE=$(getBootImageJSONValue '.info.pageSize')
-BOOT_DTB="${TMPDIR}/dtb"
+BOOT_DTB=$(select_dtb "$TMPDIR/out")
 BOOT_OS_VERSION=$(getBootImageJSONValue '.info.osVersion')
 BOOT_OS_PATCH_LEVEL=$(getBootImageJSONValue '.info.osPatchLevel')
 echo "BOOT_RAMDISK=$BOOT_RAMDISK"
