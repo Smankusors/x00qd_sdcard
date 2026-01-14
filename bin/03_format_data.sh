@@ -47,25 +47,25 @@ if [[ "$CONFIRM" != "yes" ]]; then
   exit 0
 fi
 
-echo "Formatting cache partition (${DEVICE}3) as $CACHE_FS..."
+echo "Formatting cache partition (${DEVICE}4) as $CACHE_FS..."
 if [[ "$CACHE_FS" == "f2fs" ]]; then
-  mkfs.f2fs -f "${DEVICE}3"
+  mkfs.f2fs -f "${DEVICE}4"
 elif [[ "$CACHE_FS" == "ext4" ]]; then
-  mkfs.ext4 -F -O dir_nlink,extra_isize,has_journal,extent,uninit_bg "${DEVICE}3"
+  mkfs.ext4 -F -O dir_nlink,extra_isize,has_journal,extent,uninit_bg "${DEVICE}4"
 fi
 
-echo "Formatting userdata partition (${DEVICE}4) as $USERDATA_FS..."
+echo "Formatting userdata partition (${DEVICE}5) as $USERDATA_FS..."
 if [[ "$USERDATA_FS" == "f2fs" ]]; then
   if [[ "$SUPPORTS_VERITY" == true ]]; then
-    mkfs.f2fs -f -O encrypt,verity "${DEVICE}4"
+    mkfs.f2fs -f -O encrypt,verity "${DEVICE}5"
   else
-    mkfs.f2fs -f -O encrypt "${DEVICE}4"
+    mkfs.f2fs -f -O encrypt "${DEVICE}5"
   fi
 elif [[ "$USERDATA_FS" == "ext4" ]]; then
   if [[ "$SUPPORTS_VERITY" == true ]]; then
-    mkfs.ext4 -F -O 64bit,dir_nlink,encrypt,extent,extra_isize,has_journal,metadata_csum,project,quota,verity "${DEVICE}4"
+    mkfs.ext4 -F -O 64bit,dir_nlink,encrypt,extent,extra_isize,has_journal,metadata_csum,project,quota,verity "${DEVICE}5"
   else
-    mkfs.ext4 -F -O 64bit,dir_nlink,encrypt,extent,extra_isize,has_journal,metadata_csum,project,quota "${DEVICE}4"
+    mkfs.ext4 -F -O 64bit,dir_nlink,encrypt,extent,extra_isize,has_journal,metadata_csum,project,quota "${DEVICE}5"
   fi
 fi
 

@@ -33,7 +33,11 @@ parted "$DEVICE" --script \
   mklabel gpt \
   mkpart microsd_system ext4 2048s 7342079s \
   mkpart microsd_vendor ext4 7342080s 9439231s \
-  mkpart microsd_cache ext4 9439232s 9701375s \
-  mkpart microsd_userdata ext4 9701376s 100%
+  mkpart microsd_boot ext4 9439232s 9570303s \
+  mkpart microsd_cache ext4 9570304s 9832447s \
+  mkpart microsd_userdata ext4 9832448s 100%
+
+echo "Formatting boot partition (${DEVICE}3) as ext4..."
+mkfs.ext4 -F -O dir_nlink,extra_isize,has_journal,extent,uninit_bg "${DEVICE}3"
 
 echo "Done."

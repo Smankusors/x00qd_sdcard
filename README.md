@@ -164,7 +164,7 @@ fastboot flash boot work/u-boot.img
 fastboot reboot
 ```
 
-To get U-Boot to automatically boot Android from the microSD, we can replace step 4 of patching boot.img with writing extlinux boot config to the cache partition of the microSD card:
+To get U-Boot to automatically boot Android from the microSD, we can replace step 4 of patching boot.img with writing extlinux boot config to the boot partition of the microSD card:
 
 ```
 ./runInDocker.sh 04_write_extlinux_boot_config.sh /dev/sdX
