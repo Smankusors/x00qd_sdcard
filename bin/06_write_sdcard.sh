@@ -19,10 +19,10 @@ if [[ ! -b "$DEVICE" ]]; then
   exit 1
 fi
 
-echo "Writing system to ${DEVICE}1"
-pv work/system.img | dd of=${DEVICE}1 iflag=fullblock oflag=direct bs=4M
+echo "Writing system to ${DEVICE}2"
+pv work/system.img | dd of=${DEVICE}2 iflag=fullblock oflag=direct bs=4M
 
-echo "Writing vendor to ${DEVICE}2"
-pv work/vendor.img | dd of=${DEVICE}2 iflag=fullblock oflag=direct bs=4M
+echo "Writing vendor to ${DEVICE}3"
+pv work/vendor.img | dd of=${DEVICE}3 iflag=fullblock oflag=direct bs=4M
 
 echo "Done."

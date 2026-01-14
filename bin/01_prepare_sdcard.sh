@@ -6,7 +6,6 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-# Check if a device was provided as an argument
 if [[ -z "$1" ]]; then
   echo "Usage: $0 /dev/sdX"
   exit 1
@@ -19,6 +18,8 @@ if [[ ! -b "$DEVICE" ]]; then
   exit 1
 fi
 
+source work/config
+
 echo "Current partition table for $DEVICE:"
 parted "$DEVICE" print
 
@@ -28,16 +29,28 @@ if [[ "$CONFIRM" != "yes" ]]; then
   exit 0
 fi
 
+BOOT_PARTITION_START=1048576 # aligned to 2048s for best performance
+SYSTEM_PARTITION_START=$(( BOOT_PARTITION_START + BOARD_BOOTIMAGE_PARTITION_SIZE ))
+VENDOR_PARTITION_START=$(( SYSTEM_PARTITION_START + BOARD_SYSTEMIMAGE_PARTITION_SIZE ))
+CACHE_PARTITION_START=$(( VENDOR_PARTITION_START + BOARD_VENDORIMAGE_PARTITION_SIZE ))
+USERDATA_PARTITION_START=$(( CACHE_PARTITION_START + BOARD_CACHEIMAGE_PARTITION_SIZE ))
+
+echo "BOOT_PARTITION_START=$BOOT_PARTITION_START"
+echo "SYSTEM_PARTITION_START=$SYSTEM_PARTITION_START"
+echo "VENDOR_PARTITION_START=$VENDOR_PARTITION_START"
+echo "CACHE_PARTITION_START=$CACHE_PARTITION_START"
+echo "USERDATA_PARTITION_START=$USERDATA_PARTITION_START"
+
 echo "Creating partitions on $DEVICE..."
 parted "$DEVICE" --script \
   mklabel gpt \
-  mkpart microsd_system ext4 2048s 7342079s \
-  mkpart microsd_vendor ext4 7342080s 9439231s \
-  mkpart microsd_boot ext4 9439232s 9570303s \
-  mkpart microsd_cache ext4 9570304s 9832447s \
-  mkpart microsd_userdata ext4 9832448s 100%
+  mkpart microsd_boot ext4 ${BOOT_PARTITION_START}B $(( SYSTEM_PARTITION_START - 1 ))B \
+  mkpart microsd_system ext4 ${SYSTEM_PARTITION_START}B $(( VENDOR_PARTITION_START - 1 ))B \
+  mkpart microsd_vendor ext4 ${VENDOR_PARTITION_START}B $(( CACHE_PARTITION_START - 1 ))B \
+  mkpart microsd_cache ext4 ${CACHE_PARTITION_START}B $(( USERDATA_PARTITION_START - 1 ))B \
+  mkpart microsd_userdata ext4 ${USERDATA_PARTITION_START}B 100%
 
-echo "Formatting boot partition (${DEVICE}3) as ext4..."
-mkfs.ext4 -F -O dir_nlink,extra_isize,has_journal,extent,uninit_bg "${DEVICE}3"
+echo "Formatting boot partition (${DEVICE}1) as ext4..."
+mkfs.ext4 -F -O dir_nlink,extra_isize,has_journal,extent,uninit_bg "${DEVICE}1"
 
 echo "Done."
