@@ -104,13 +104,7 @@ Run the following command, replacing /dev/sdX with your microSD card's device pa
 ### 3. Format data
 
 ```
-./runInDocker.sh 03_format_data.sh /dev/sdX ext4
-```
-
-or
-
-```
-./runInDocker.sh 03_format_data.sh /dev/sdX f2fs
+./runInDocker.sh 03_format_data.sh /dev/sdX
 ```
 
 ### 4. Patch boot.img or write extlinux boot config
