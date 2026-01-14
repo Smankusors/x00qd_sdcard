@@ -10,43 +10,19 @@ fi
 echo "Extracting device trees..."
 TMPDIR="$(mktemp -d)"
 echo "TMPDIR=$TMPDIR"
-cp Android_boot_image_editor/build/unzip_boot/kernel ${TMPDIR}/kernel
-python3 extract-dtb/extract_dtb/extract_dtb.py -o ${TMPDIR}/out ${TMPDIR}/kernel
-
-KERNEL_VERSION=$(cat Android_boot_image_editor/build/unzip_boot/kernel_version.txt)
-echo "Kernel version: $KERNEL_VERSION"
-if [[ $KERNEL_VERSION == "4.4"* ]]; then
-  for file in ${TMPDIR}/out/*.dtb; do
-    if [[ $(strings $file | grep -c "ARA-ER") -eq 0 ]]; then
-      echo "Removing $file..."
-      rm $file
-    fi
-  done
-  if [[ "$DT_MOUNT_MODE" == "rw" ]]; then
-    echo "Using dts 4.4 rw patch"
-    cp patch/dts_4.4_rw.patch ${TMPDIR}/dts.patch
-  else
-    echo "Using dts 4.4 ro patch"
-    cp patch/dts_4.4.patch ${TMPDIR}/dts.patch
-  fi
-elif [[ $KERNEL_VERSION == "4.19"* ]]; then
-  if [[ "$DT_MOUNT_MODE" == "rw" ]]; then
-    echo "Using dts 4.19 rw patch"
-    cp patch/dts_4.19_rw.patch ${TMPDIR}/dts.patch
-  else
-    echo "Using dts 4.19 ro patch"
-    cp patch/dts_4.19.patch ${TMPDIR}/dts.patch
-  fi
-else
-  echo "Error: Unsupported kernel version $KERNEL_VERSION"
-  exit 1
-fi
+cp Android_boot_image_editor/build/unzip_boot/kernel $TMPDIR/kernel
+python3 extract-dtb/extract_dtb/extract_dtb.py -o $TMPDIR/out $TMPDIR/kernel
 
 echo "Patching device trees..."
-for file in ${TMPDIR}/out/*.dtb; do
-  dtc -I dtb -O dts -o "${file%.dtb}.dts" "$file"
-  patch "${file%.dtb}.dts" < ${TMPDIR}/dts.patch
-  dtc -I dts -O dtb -o "$file" "${file%.dtb}.dts"
+for file in $TMPDIR/out/*.dtb; do
+  if [[ $(strings $file | grep -c "ARA-ER") -eq 0 ]]; then
+    echo "Removing $file..."
+    rm $file
+  elif [[ "$DT_MOUNT_MODE" == "rw" ]]; then
+    fdtoverlay -i $file -o $file patch/fstab-microsd.dtbo patch/fstab-microsd-rw.dtbo
+  else
+    fdtoverlay -i $file -o $file patch/fstab-microsd.dtbo
+  fi
 done
 
 echo "Concatenating device trees..."
