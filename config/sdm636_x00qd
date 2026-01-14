@@ -1,0 +1,14 @@
+source config/sdm636
+
+BOARD_SYSTEMIMAGE_PARTITION_SIZE=3758096384
+BOARD_VENDORIMAGE_PARTITION_SIZE=1073741824
+
+select_dtb() {
+  # select dtb that contain ARA-ER in their name
+  for file in "$1"/*.dtb; do
+    if strings "$file" | grep -q "ARA-ER"; then
+      echo $file
+      return
+    fi
+  done
+}

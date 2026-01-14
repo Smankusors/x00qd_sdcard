@@ -9,6 +9,7 @@ services:
     tty: true
     volumes:
       - ./bin:/root/bin
+      - ./config:/root/config
       - ./patch:/root/patch
       - ./work:/root/work
       - ./work/unzip_boot:/root/Android_boot_image_editor/build/unzip_boot
