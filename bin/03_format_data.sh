@@ -31,8 +31,8 @@ else
   exit 1
 fi
 
-read -rp "Filesystem for cache (${DEVICE}3) [ext4/f2fs]: " CACHE_FS
-read -rp "Filesystem for userdata (${DEVICE}4) [ext4/f2fs]: " USERDATA_FS
+read -rp "Filesystem for cache (${DEVICE}4) [ext4/f2fs]: " CACHE_FS
+read -rp "Filesystem for userdata (${DEVICE}5) [ext4/f2fs]: " USERDATA_FS
 
 for FS in "$CACHE_FS" "$USERDATA_FS"; do
   if [[ "$FS" != "ext4" && "$FS" != "f2fs" ]]; then
