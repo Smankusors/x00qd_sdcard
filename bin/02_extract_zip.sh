@@ -31,11 +31,14 @@ fi
 
 echo "Desparsing..."
 python3 /root/sdat2img/sdat2img.py system.transfer.list system.new.dat
-python3 /root/sdat2img/sdat2img.py vendor.transfer.list vendor.new.dat vendor.img
+if [ -f vendor.new.dat ]; then
+  python3 /root/sdat2img/sdat2img.py vendor.transfer.list vendor.new.dat vendor.img
+fi
 
 echo "Cleaning up..."
-rm system.new* system.patch.dat system.transfer.list
-rm vendor.new* vendor.patch.dat vendor.transfer.list
+rm -f \
+  system.new* system.patch.dat system.transfer.list \
+  vendor.new* vendor.patch.dat vendor.transfer.list
 
 cd ..
 
