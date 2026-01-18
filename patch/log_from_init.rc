@@ -1,6 +1,5 @@
 
 on early-init
-    exec u:r:su:s0 -- /system/bin/mount -o remount,rw /vendor
     exec_background u:r:su:s0 -- /system/bin/sh -c "/system/bin/dmesg --follow >> /vendor/dmesg.txt"
 
 on early-fs
