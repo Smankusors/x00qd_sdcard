@@ -45,18 +45,8 @@ BOOT_PAGESIZE=$(getBootImageJSONValue '.info.pageSize')
 BOOT_DTB=$(select_dtb "$TMPDIR/out")
 BOOT_OS_VERSION=$(getBootImageJSONValue '.info.osVersion')
 BOOT_OS_PATCH_LEVEL=$(getBootImageJSONValue '.info.osPatchLevel')
-echo "BOOT_RAMDISK=$BOOT_RAMDISK"
-echo "BOOT_BASE=$BOOT_BASE"
-echo "BOOT_SECOND_OFFSET=$BOOT_SECOND_OFFSET"
-echo "BOOT_CMDLINE=$BOOT_CMDLINE"
-echo "BOOT_KERNEL_OFFSET=$BOOT_KERNEL_OFFSET"
-echo "BOOT_RAMDISK_OFFSET=$BOOT_RAMDISK_OFFSET"
-echo "BOOT_TAGS_OFFSET=$BOOT_TAGS_OFFSET"
-echo "BOOT_PAGESIZE=$BOOT_PAGESIZE"
-echo "BOOT_DTB=$BOOT_DTB"
-echo "BOOT_OS_VERSION=$BOOT_OS_VERSION"
-echo "BOOT_OS_PATCH_LEVEL=$BOOT_OS_PATCH_LEVEL"
 
+set -x
 python3 Android_boot_image_editor/aosp/system/tools/mkbootimg/mkbootimg.py \
   --header_version 2 \
   --kernel Android_boot_image_editor/build/unzip_boot/kernel \
@@ -72,6 +62,7 @@ python3 Android_boot_image_editor/aosp/system/tools/mkbootimg/mkbootimg.py \
   --os_version "${BOOT_OS_VERSION}" \
   --os_patch_level "${BOOT_OS_PATCH_LEVEL}" \
   -o work/boot.img
+set +x
 
 rm -rf ${TMPDIR}
 echo "Done."
