@@ -40,7 +40,8 @@ getBootImageJSONValue() {
 BOOTIMG_OS_VERSION=$(getBootImageJSONValue .info.osVersion)
 BOOTIMG_OS_PATCH_LEVEL=$(getBootImageJSONValue .info.osPatchLevel)
 
-echo "Creating boot.img... (os_version=$BOOTIMG_OS_VERSION, os_patch_level=$BOOTIMG_OS_PATCH_LEVEL)"
+echo "Creating boot.img..."
+set -x
 mkbootimg \
         --kernel build/u-boot-nodtb.bin.gz \
         --ramdisk ~/patch/empty-initramfs.cpio.gz \
@@ -56,6 +57,7 @@ mkbootimg \
         --os_version "$BOOTIMG_OS_VERSION" \
         --os_patch_level "$BOOTIMG_OS_PATCH_LEVEL" \
         -o ~/work/u-boot.img
+set +x
 
 echo "Cleaning up..."
 rm -rf $TEMPDIR
