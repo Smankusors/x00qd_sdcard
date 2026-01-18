@@ -6,11 +6,11 @@
 		target-path = "/firmware/android/fstab";
 		__overlay__ {
 			vendor {
-				mnt_flags = "rw,barrier=1,discard";
+				mnt_flags = "rw,sync,barrier=1,discard";
 			};
 
 			system {
-				mnt_flags = "rw,barrier=1,discard";
+				mnt_flags = "rw,sync,barrier=1,discard";
 			};
 		};
 	};
