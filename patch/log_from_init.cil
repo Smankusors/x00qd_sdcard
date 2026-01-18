@@ -1,0 +1,12 @@
+
+(allow init su (process (noatsecure rlimitinh siginh transition)))
+(allow su kernel (system (syslog_read)))
+(allow su kmsg_device (chr_file (open read)))
+(allow su logcat_exec (file (execute execute_no_trans getattr open read)))
+(allow su logd (unix_stream_socket (connectto)))
+(allow su logdr_socket (sock_file (write)))
+(allow su self (capability (sys_resource)))
+(allow su shell_exec (file (getattr entrypoint execute read)))
+(allow su toolbox_exec (file (execute execute_no_trans getattr open read)))
+(allow su vendor_file (dir (add_name write)))
+(allow su vendor_file (file (append create ioctl)))

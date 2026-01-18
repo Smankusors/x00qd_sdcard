@@ -11,8 +11,12 @@ echo "Mounting vendor to $TMPDIR..."
 mount work/vendor.img $TMPDIR
 
 if [[ "$1" == "--with-debug" ]]; then
-  echo "Debugging enabled, patching init.qcom.rc..."
+  echo "Debugging enabled"
+  echo "Patching init.qcom.rc..."
   cat patch/log_from_init.rc >> $TMPDIR/etc/init/hw/init.qcom.rc
+  echo "Patching sepolicy..."
+  rm -f $TMPDIR/etc/selinux/precompiled_sepolicy
+  cat patch/log_from_init.cil >> $TMPDIR/etc/selinux/vendor_sepolicy.cil
 fi
 
 echo "Patching fstab.qcom..."
