@@ -1,6 +1,6 @@
 
 on early-init
-    exec_background u:r:su:s0 -- /system/bin/sh -c "/system/bin/dmesg --follow >> /vendor/dmesg.txt"
+    exec_background u:r:su:s0 -- /system/bin/sh -c "/system/bin/dmesg --follow >> /vendor/dmesg.txt 2>> /vendor/dmesg.err"
 
 on early-fs
-    exec_background u:r:su:s0 -- /system/bin/sh -c "/system/bin/logcat >> /vendor/logcat.txt"
+    exec_background u:r:su:s0 -- /system/bin/sh -c "/system/bin/logcat >> /vendor/logcat.txt 2>> /vendor/logcat.err"
