@@ -37,24 +37,18 @@ echo "Setting up folder structure..."
 mkdir -p "$BOOTMOUNTDIR/boot"
 mkdir -p "$BOOTMOUNTDIR/boot/extlinux"
 
-getBootImageJSONValue() {
-  jq -r "$1" ~/Android_boot_image_editor/build/unzip_boot/boot.json
-}
-
-CMDLINE=$(getBootImageJSONValue '.info.cmdline')
-echo "CMDLINE=$CMDLINE"
-
+BOOT_JSON=~/Android_boot_image_editor/build/unzip_boot/boot.json
+EXTLINUX_CONF="$BOOTMOUNTDIR/boot/extlinux/extlinux.conf"
 echo "Writing extlinux configuration..."
-cp patch/extlinux.conf.template "$BOOTMOUNTDIR/boot/extlinux/extlinux.conf"
+cp patch/extlinux.conf.template "$EXTLINUX_CONF"
 cp patch/fstab-microsd.dtbo "$BOOTMOUNTDIR/boot/fstab-microsd.dtbo"
-sed -i "s|\[CMDLINE\]|$CMDLINE|g" "$BOOTMOUNTDIR/boot/extlinux/extlinux.conf"
 if [[ "$DT_MOUNT_MODE" == "rw" ]]; then
   FDTOVERLAYS="/boot/fstab-microsd.dtbo /boot/fstab-microsd-rw.dtbo"
   cp patch/fstab-microsd-rw.dtbo "$BOOTMOUNTDIR/boot/fstab-microsd-rw.dtbo"
 else
   FDTOVERLAYS="/boot/fstab-microsd.dtbo"
 fi
-sed -i "s|\[FDTOVERLAYS\]|$FDTOVERLAYS|g" "$BOOTMOUNTDIR/boot/extlinux/extlinux.conf"
+python3 bin/render_extlinux_config.py "$BOOT_JSON" "$EXTLINUX_CONF" "$FDTOVERLAYS"
 
 echo "Copying kernel and ramdisk..."
 cp Android_boot_image_editor/build/unzip_boot/kernel "$BOOTMOUNTDIR/boot/kernel"
