@@ -8,15 +8,42 @@ fi
 
 TMPDIR="$(mktemp -d)"
 echo "Mounting vendor to $TMPDIR..."
-mount work/vendor.img $TMPDIR
+VENDOR_MOUNTED=0
+cleanup() {
+  if [[ "$VENDOR_MOUNTED" -eq 1 ]]; then
+    echo "Unmounting..."
+    umount "$TMPDIR"
+    VENDOR_MOUNTED=0
+  fi
+  rmdir "$TMPDIR" 2>/dev/null || true
+}
+trap cleanup EXIT
+mount work/vendor.img "$TMPDIR"
+VENDOR_MOUNTED=1
+MOUNT_ROOT="$(realpath -e -- "$TMPDIR")"
+
+append_vendor_patch() {
+  local destination="$MOUNT_ROOT/$1"
+  local canonical
+
+  canonical="$(realpath -e -- "$destination")" || {
+    echo "Missing vendor debug destination: $destination" >&2
+    return 1
+  }
+  if [[ "$canonical" != "$destination" || ! -f "$canonical" ]]; then
+    echo "Refusing unsafe vendor debug destination: $destination" >&2
+    return 1
+  fi
+  cat -- "$2" >> "$canonical"
+}
 
 if [[ "$1" == "--with-debug" ]]; then
   echo "Debugging enabled"
   echo "Patching init.qcom.rc..."
-  cat patch/log_from_init.rc >> $TMPDIR/etc/init/hw/init.qcom.rc
+  append_vendor_patch etc/init/hw/init.qcom.rc patch/log_from_init.rc
   echo "Patching sepolicy..."
+  append_vendor_patch etc/selinux/vendor_sepolicy.cil patch/log_from_init.cil
   rm -f $TMPDIR/etc/selinux/precompiled_sepolicy
-  cat patch/log_from_init.cil >> $TMPDIR/etc/selinux/vendor_sepolicy.cil
 fi
 
 echo "Patching fstab.qcom..."
@@ -43,9 +70,5 @@ echo "/dev/block/platform/soc/c084000.sdhci/by-name/microsd_cache u:object_r:cac
 echo "/dev/block/platform/soc/c084000.sdhci/by-name/microsd_userdata u:object_r:userdata_block_device:s0" >> $VENDORFILECONTEXTSFILE
 chcon --reference=$VENDORFILECONTEXTSFILE.bak $VENDORFILECONTEXTSFILE
 rm $VENDORFILECONTEXTSFILE.bak
-
-echo "Unmounting..."
-umount $TMPDIR
-rm -r $TMPDIR
 
 echo "Done."
