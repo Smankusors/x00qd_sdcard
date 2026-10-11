@@ -13,6 +13,41 @@ elif [ ${#zip_files[@]} -gt 1 ]; then
 fi
 TARGET_ZIP="${zip_files[0]}"
 
+if ! zip_members=$(unzip -Z1 "$TARGET_ZIP"); then
+  echo "Error: Unable to read the ROM zip contents."
+  exit 1
+fi
+
+zip_has_file() {
+  printf '%s\n' "$zip_members" | grep -Fqx -- "$1"
+}
+
+missing_files=()
+for required_file in boot.img system.transfer.list; do
+  if ! zip_has_file "$required_file"; then
+    missing_files+=("$required_file")
+  fi
+done
+
+if ! zip_has_file system.new.dat.br && ! zip_has_file system.new.dat; then
+  missing_files+=("system.new.dat.br or system.new.dat")
+fi
+
+if zip_has_file vendor.new.dat.br || zip_has_file vendor.new.dat || zip_has_file vendor.transfer.list; then
+  if ! zip_has_file vendor.transfer.list; then
+    missing_files+=("vendor.transfer.list")
+  fi
+  if ! zip_has_file vendor.new.dat.br && ! zip_has_file vendor.new.dat; then
+    missing_files+=("vendor.new.dat.br or vendor.new.dat")
+  fi
+fi
+
+if ((${#missing_files[@]} > 0)); then
+  echo "Error: ROM zip is missing required files:"
+  printf '  - %s\n' "${missing_files[@]}"
+  exit 1
+fi
+
 echo "Unzipping..."
 unzip -o "${TARGET_ZIP}" \
   boot.img \
