@@ -30,7 +30,7 @@
 					compatible = "android,cache";
 					dev = "/dev/block/platform/soc/[EMMC_ADDR]/by-name/cache";
 					type = "ext4";
-					mnt_point = "/vendor/internalcachesothatwecanbootfromsdcard";
+					mnt_point = "/internalcachesothatwecanbootfromsdcard";
 					mnt_flags = "ro,barrier=1,discard";
 					fsmgr_flags = "wait";
 					status = "ok";

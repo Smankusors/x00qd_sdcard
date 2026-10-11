@@ -58,9 +58,6 @@ sed -i "s/\/dev\/block\/bootdevice\/by-name\/cache/\/dev\/block\/platform\/soc\/
 chcon --reference=$FSTABQCOMFILE.bak $FSTABQCOMFILE
 rm $FSTABQCOMFILE.bak
 
-echo "mkdir $TMPDIR/internalcachesothatwecanbootfromsdcard..."
-mkdir $TMPDIR/internalcachesothatwecanbootfromsdcard | true
-
 echo "Patching vendor_file_contexts..."
 VENDORFILECONTEXTSFILE=$TMPDIR/etc/selinux/vendor_file_contexts
 cp $VENDORFILECONTEXTSFILE $VENDORFILECONTEXTSFILE.bak
