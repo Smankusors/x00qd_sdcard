@@ -38,13 +38,13 @@ if [[ "$VENDOR_LAYOUT" == separate ]]; then
 else
   VENDOR_ROOT=""
   for candidate in "$MOUNT_ROOT/vendor" "$MOUNT_ROOT/system/vendor" "$MOUNT_ROOT"; do
-    if [[ -f "$candidate/etc/fstab.qcom" && -f "$candidate/etc/selinux/vendor_file_contexts" ]]; then
+    if [[ -f "$candidate/etc/fstab.qcom" ]]; then
       VENDOR_ROOT="$candidate"
       break
     fi
   done
   if [[ -z "$VENDOR_ROOT" ]]; then
-    echo "Error: system.img has no recognizable vendor tree with fstab.qcom and vendor_file_contexts."
+    echo "Error: system.img has no recognizable vendor tree with fstab.qcom."
     exit 1
   fi
 fi
@@ -82,17 +82,5 @@ sed -i "s/\/dev\/block\/bootdevice\/by-name\/userdata/\/dev\/block\/platform\/so
 sed -i "s/\/dev\/block\/bootdevice\/by-name\/cache/\/dev\/block\/platform\/soc\/$MICROSD_ADDR\/by-name\/microsd_cache/g" $FSTABQCOMFILE
 chcon --reference=$FSTABQCOMFILE.bak $FSTABQCOMFILE
 rm $FSTABQCOMFILE.bak
-
-echo "Patching vendor_file_contexts..."
-VENDORFILECONTEXTSFILE="$VENDOR_ROOT/etc/selinux/vendor_file_contexts"
-cp $VENDORFILECONTEXTSFILE $VENDORFILECONTEXTSFILE.bak
-chcon --reference=$VENDORFILECONTEXTSFILE $VENDORFILECONTEXTSFILE.bak
-sed -i 's|^/dev/block/mmcblk1[[:space:]]\+u:object_r:sd_device:s0$|/dev/block/mmcblk1 u:object_r:root_block_device:s0|' $VENDORFILECONTEXTSFILE
-sed -i '/^\/dev\/block\/mmcblk1p1[[:space:]]/d' $VENDORFILECONTEXTSFILE
-echo "/dev/block/platform/soc/$MICROSD_ADDR/by-name/microsd_system u:object_r:system_block_device:s0" >> $VENDORFILECONTEXTSFILE
-echo "/dev/block/platform/soc/$MICROSD_ADDR/by-name/microsd_cache u:object_r:cache_block_device:s0" >> $VENDORFILECONTEXTSFILE
-echo "/dev/block/platform/soc/$MICROSD_ADDR/by-name/microsd_userdata u:object_r:userdata_block_device:s0" >> $VENDORFILECONTEXTSFILE
-chcon --reference=$VENDORFILECONTEXTSFILE.bak $VENDORFILECONTEXTSFILE
-rm $VENDORFILECONTEXTSFILE.bak
 
 echo "Done."

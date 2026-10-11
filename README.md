@@ -11,12 +11,13 @@
   - [1. Prepare the sdcard](#1-prepare-the-sdcard)
   - [2. Extract zip](#2-extract-zip)
   - [3. Format data](#3-format-data)
-  - [4. Patch boot.img or write extlinux boot config](#4-patch-bootimg-or-write-extlinux-boot-config)
+  - [4. Patch vendor file contexts](#4-patch-vendor-file-contexts)
+  - [5. Patch boot.img or write extlinux boot config](#5-patch-bootimg-or-write-extlinux-boot-config)
     - [Patch boot.img (stock bootloader)](#patch-bootimg-stock-bootloader)
     - [Or write extlinux config (U-Boot or other bootloaders)](#or-write-extlinux-config-u-boot-or-other-bootloaders)
-  - [5. Patch vendor image](#5-patch-vendor-image)
-  - [6. Write system and vendor images to sdcard](#6-write-system-and-vendor-images-to-sdcard)
-  - [7. Flash modified boot.img to the phone](#7-flash-modified-bootimg-to-the-phone)
+  - [6. Patch vendor files](#6-patch-vendor-files)
+  - [7. Write system and vendor images to sdcard](#7-write-system-and-vendor-images-to-sdcard)
+  - [8. Flash modified boot.img to the phone](#8-flash-modified-bootimg-to-the-phone)
 - [U-Boot Bootloader](#u-boot-bootloader)
 - [Debugging Early Android Boot Issues](#debugging-early-android-boot-issues)
 - [Acknowledgements](#acknowledgements)
@@ -109,35 +110,41 @@ Run the following command, replacing /dev/sdX with your microSD card's device pa
 ./runInDocker.sh 03_format_data.sh /dev/sdX
 ```
 
-### 4. Patch boot.img or write extlinux boot config
+### 4. Patch vendor file contexts
+
+```
+./runInDocker.sh 04_patch_vendor_file_contexts.sh
+```
+
+### 5. Patch boot.img or write extlinux boot config
 
 Choose boot method:
 
 #### Patch boot.img (stock bootloader)
 
 ```
-./runInDocker.sh 04_patch_boot.sh
+./runInDocker.sh 05_patch_boot.sh
 ```
 
 #### Or write extlinux config (U-Boot or other bootloaders)
 
 ```
-./runInDocker.sh 04_write_extlinux_boot_config.sh /dev/sdX
+./runInDocker.sh 05_write_extlinux_boot_config.sh /dev/sdX
 ```
 
-### 5. Patch vendor files
+### 6. Patch vendor files
 
 ```
-./runInDocker.sh 05_patch_vendor.sh
+./runInDocker.sh 06_patch_vendor.sh
 ```
 
-### 6. Write images to sdcard
+### 7. Write images to sdcard
 
 ```
-./runInDocker.sh 06_write_sdcard.sh /dev/sdX
+./runInDocker.sh 07_write_sdcard.sh /dev/sdX
 ```
 
-### 7. Flash modified boot.img to the phone
+### 8. Flash modified boot.img to the phone
 
 ```
 fastboot flash boot work/boot.img
@@ -150,7 +157,7 @@ That's it! Now you can enjoy Android on your microSD card without fear of bricki
 
 If you want to multi-boot with postmarketOS with just swapping the microSD, you can opt to use U-Boot bootloader instead of the stock one.
 
-The included `07_build_uboot.sh` currently builds only for the ZE620KL (X00QD). The MSM8953 config can use the stock boot-image patch path, but its U-Boot build needs a separate port.
+The included `08_build_uboot.sh` currently builds only for the ZE620KL (X00QD). The MSM8953 config can use the stock boot-image patch path, but its U-Boot build needs a separate port.
 
 > [!IMPORTANT]
 > For encrypted storage to work, U-Boot's boot.img metadata must match the installed Android OS. For more information, please check [Android Keymaster Issue on Qualcomm Devices](https://wiki.postmarketos.org/wiki/Category:Bootloaders/Keymaster)
@@ -158,7 +165,7 @@ The included `07_build_uboot.sh` currently builds only for the ZE620KL (X00QD). 
 To build U-Boot bootloader, you need to run `02_extract_zip.sh` first to extract the boot.img metadata, and then you can just build with this simple command:
 
 ```
-./runInDocker.sh 07_build_uboot.sh
+./runInDocker.sh 08_build_uboot.sh
 ```
 
 It will compile and generate `work/u-boot.img` file that you can flash to your phone with:
@@ -168,10 +175,10 @@ fastboot flash boot work/u-boot.img
 fastboot reboot
 ```
 
-To get U-Boot to automatically boot Android from the microSD, we can replace step 4 of patching boot.img with writing extlinux boot config to the boot partition of the microSD card:
+To get U-Boot to automatically boot Android from the microSD, we can replace step 5 of patching boot.img with writing extlinux boot config to the boot partition of the microSD card:
 
 ```
-./runInDocker.sh 04_write_extlinux_boot_config.sh /dev/sdX
+./runInDocker.sh 05_write_extlinux_boot_config.sh /dev/sdX
 ```
 
 ## Debugging Early Android Boot Issues
@@ -179,9 +186,9 @@ To get U-Boot to automatically boot Android from the microSD, we can replace ste
 This repo includes an optional debugging feature that can help diagnose early boot problems. You can enable debugging by executing steps with the following parameters:
 
 ```
-./runInDocker.sh 04_patch_boot.sh --rw
-./runInDocker.sh 04_write_extlinux_boot_config.sh /dev/sdX --rw
-./runInDocker.sh 05_patch_vendor.sh --with-debug
+./runInDocker.sh 05_patch_boot.sh --rw
+./runInDocker.sh 05_write_extlinux_boot_config.sh /dev/sdX --rw
+./runInDocker.sh 06_patch_vendor.sh --with-debug
 ```
 
 It will write kernel logs and logcat to `/vendor/dmesg.log` and `/vendor/logcat.log` on microSD respectively.
