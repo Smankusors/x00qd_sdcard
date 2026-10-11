@@ -8,24 +8,49 @@ fi
 
 source work/config
 
+case "${VENDOR_LAYOUT:-}" in
+  separate)
+    VENDOR_IMAGE="work/vendor.img"
+    ;;
+  system)
+    VENDOR_IMAGE="work/system.img"
+    ;;
+esac
+
 TMPDIR="$(mktemp -d)"
-echo "Mounting vendor to $TMPDIR..."
-VENDOR_MOUNTED=0
+echo "Mounting $VENDOR_IMAGE to $TMPDIR..."
+IMAGE_MOUNTED=0
 cleanup() {
-  if [[ "$VENDOR_MOUNTED" -eq 1 ]]; then
+  if [[ "$IMAGE_MOUNTED" -eq 1 ]]; then
     echo "Unmounting..."
     umount "$TMPDIR"
-    VENDOR_MOUNTED=0
+    IMAGE_MOUNTED=0
   fi
   rmdir "$TMPDIR" 2>/dev/null || true
 }
 trap cleanup EXIT
-mount work/vendor.img "$TMPDIR"
-VENDOR_MOUNTED=1
+mount "$VENDOR_IMAGE" "$TMPDIR"
+IMAGE_MOUNTED=1
 MOUNT_ROOT="$(realpath -e -- "$TMPDIR")"
 
+if [[ "$VENDOR_LAYOUT" == separate ]]; then
+  VENDOR_ROOT="$MOUNT_ROOT"
+else
+  VENDOR_ROOT=""
+  for candidate in "$MOUNT_ROOT/vendor" "$MOUNT_ROOT/system/vendor" "$MOUNT_ROOT"; do
+    if [[ -f "$candidate/etc/fstab.qcom" && -f "$candidate/etc/selinux/vendor_file_contexts" ]]; then
+      VENDOR_ROOT="$candidate"
+      break
+    fi
+  done
+  if [[ -z "$VENDOR_ROOT" ]]; then
+    echo "Error: system.img has no recognizable vendor tree with fstab.qcom and vendor_file_contexts."
+    exit 1
+  fi
+fi
+
 append_vendor_patch() {
-  local destination="$MOUNT_ROOT/$1"
+  local destination="$VENDOR_ROOT/$1"
   local canonical
 
   canonical="$(realpath -e -- "$destination")" || {
@@ -45,11 +70,11 @@ if [[ "$1" == "--with-debug" ]]; then
   append_vendor_patch etc/init/hw/init.qcom.rc patch/log_from_init.rc
   echo "Patching sepolicy..."
   append_vendor_patch etc/selinux/vendor_sepolicy.cil patch/log_from_init.cil
-  rm -f $TMPDIR/etc/selinux/precompiled_sepolicy
+  rm -f "$VENDOR_ROOT/etc/selinux/precompiled_sepolicy"
 fi
 
 echo "Patching fstab.qcom..."
-FSTABQCOMFILE=$TMPDIR/etc/fstab.qcom
+FSTABQCOMFILE="$VENDOR_ROOT/etc/fstab.qcom"
 cp $FSTABQCOMFILE $FSTABQCOMFILE.bak
 chcon --reference=$FSTABQCOMFILE $FSTABQCOMFILE.bak
 sed -i "/$MICROSD_ADDR/d" $FSTABQCOMFILE
@@ -59,7 +84,7 @@ chcon --reference=$FSTABQCOMFILE.bak $FSTABQCOMFILE
 rm $FSTABQCOMFILE.bak
 
 echo "Patching vendor_file_contexts..."
-VENDORFILECONTEXTSFILE=$TMPDIR/etc/selinux/vendor_file_contexts
+VENDORFILECONTEXTSFILE="$VENDOR_ROOT/etc/selinux/vendor_file_contexts"
 cp $VENDORFILECONTEXTSFILE $VENDORFILECONTEXTSFILE.bak
 chcon --reference=$VENDORFILECONTEXTSFILE $VENDORFILECONTEXTSFILE.bak
 sed -i 's|^/dev/block/mmcblk1[[:space:]]\+u:object_r:sd_device:s0$|/dev/block/mmcblk1 u:object_r:root_block_device:s0|' $VENDORFILECONTEXTSFILE

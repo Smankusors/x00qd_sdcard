@@ -19,10 +19,16 @@ if [[ ! -b "$DEVICE" ]]; then
   exit 1
 fi
 
+source work/config
+
 echo "Writing system to ${DEVICE}2"
 pv work/system.img | dd of=${DEVICE}2 iflag=fullblock oflag=direct bs=4M
 
-echo "Writing vendor to ${DEVICE}3"
-pv work/vendor.img | dd of=${DEVICE}3 iflag=fullblock oflag=direct bs=4M
+if [[ "$VENDOR_LAYOUT" == separate ]]; then
+  echo "Writing vendor to ${DEVICE}3"
+  pv work/vendor.img | dd of=${DEVICE}3 iflag=fullblock oflag=direct bs=4M
+else
+  echo "No microSD vendor image to write for VENDOR_LAYOUT=$VENDOR_LAYOUT."
+fi
 
 echo "Done."

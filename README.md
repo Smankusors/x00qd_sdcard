@@ -30,7 +30,7 @@
 
 ## Compatibility
 
-This project is designed for the **Asus X00QD**, which features the Qualcomm Snapdragon 636 (SDM636) chipset. However, it could potentially work on other devices with similar SoCs, such as those based on **SDM630**, **SDM636**, or **SDM660** chipsets. Your mileage may vary.
+This project is designed for the **Asus ZE620KL (X00QD)**, which features the Qualcomm Snapdragon 636 (SDM636) chipset. It also includes an experimental config for the shared MSM8953 ROM used by the **Asus ZE520KL** (Leo) and **ZE552KL** (Libra). Other devices with similar SoCs, such as those based on **SDM630**, **SDM636**, or **SDM660**, may work with a suitable device config. Your mileage may vary.
 
 Currently, it doesn't work with stock ROMs. I have no idea why, and I have no plan to support it too.
 
@@ -71,17 +71,19 @@ cd x00qd_sdcard
 docker compose build
 ```
 
+Choose a device config and prepare the environment before starting the steps below:
+
+```
+./runInDocker.sh 00_prepare_env.sh sdm636_x00qd
+```
+
+For the shared ROM used by the ZE520KL (Leo) and ZE552KL (Libra), use `msm8953_asus_libra` instead. Run this command again whenever you switch configs.
+
+`VENDOR_LAYOUT` selects how vendor files are supplied: `separate` uses a vendor image and SD partition, while `system` patches vendor files inside `system.img`.
+
 ## Procedures
 
 ### 0. Put the ROM zip to the work folder
-
-Ensure the ROM zip contains the following files:
-
-* boot.img
-* system.new.dat.br
-* system.transfer.list
-* vendor.new.dat.br
-* vendor.transfer.list
 
 Place the zip into the `work/` directory.
 
@@ -123,13 +125,13 @@ Choose boot method:
 ./runInDocker.sh 04_write_extlinux_boot_config.sh /dev/sdX
 ```
 
-### 5. Patch vendor image
+### 5. Patch vendor files
 
 ```
 ./runInDocker.sh 05_patch_vendor.sh
 ```
 
-### 6. Write system and vendor images to sdcard
+### 6. Write images to sdcard
 
 ```
 ./runInDocker.sh 06_write_sdcard.sh /dev/sdX
@@ -147,6 +149,8 @@ That's it! Now you can enjoy Android on your microSD card without fear of bricki
 ## U-Boot Bootloader
 
 If you want to multi-boot with postmarketOS with just swapping the microSD, you can opt to use U-Boot bootloader instead of the stock one.
+
+The included `07_build_uboot.sh` currently builds only for the ZE620KL (X00QD). The MSM8953 config can use the stock boot-image patch path, but its U-Boot build needs a separate port.
 
 > [!IMPORTANT]
 > For encrypted storage to work, U-Boot's boot.img metadata must match the installed Android OS. For more information, please check [Android Keymaster Issue on Qualcomm Devices](https://wiki.postmarketos.org/wiki/Category:Bootloaders/Keymaster)

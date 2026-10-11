@@ -1,0 +1,14 @@
+source config/msm8953
+
+VENDOR_LAYOUT=system
+BOARD_SYSTEMIMAGE_PARTITION_SIZE=4026531840
+
+select_dtb() {
+  # select dtb that contain LIBRA in their name
+  for file in "$1"/*.dtb; do
+    if strings "$file" | grep -q "LIBRA"; then
+      echo "$file"
+      return
+    fi
+  done
+}

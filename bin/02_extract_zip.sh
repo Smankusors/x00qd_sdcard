@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+source work/config
+
 cd work
 
 zip_files=($(find . -maxdepth 1 -name "*.zip"))
@@ -22,31 +24,49 @@ zip_has_file() {
   printf '%s\n' "$zip_members" | grep -Fqx -- "$1"
 }
 
-missing_files=()
+validation_issues=()
 for required_file in boot.img system.transfer.list; do
   if ! zip_has_file "$required_file"; then
-    missing_files+=("$required_file")
+    validation_issues+=("Missing required file: $required_file")
   fi
 done
 
 if ! zip_has_file system.new.dat.br && ! zip_has_file system.new.dat; then
-  missing_files+=("system.new.dat.br or system.new.dat")
+  validation_issues+=("Missing required system payload: system.new.dat.br or system.new.dat")
 fi
 
-if zip_has_file vendor.new.dat.br || zip_has_file vendor.new.dat || zip_has_file vendor.transfer.list; then
-  if ! zip_has_file vendor.transfer.list; then
-    missing_files+=("vendor.transfer.list")
-  fi
-  if ! zip_has_file vendor.new.dat.br && ! zip_has_file vendor.new.dat; then
-    missing_files+=("vendor.new.dat.br or vendor.new.dat")
-  fi
-fi
+case "$VENDOR_LAYOUT" in
+  separate)
+    if ! zip_has_file vendor.transfer.list; then
+      validation_issues+=("Missing required file: vendor.transfer.list")
+    fi
+    if ! zip_has_file vendor.new.dat.br && ! zip_has_file vendor.new.dat; then
+      validation_issues+=("Missing required vendor payload: vendor.new.dat.br or vendor.new.dat")
+    fi
+    ;;
+  system)
+    unexpected_vendor_files=()
+    for vendor_file in vendor.new.dat.br vendor.new.dat vendor.patch.dat vendor.transfer.list; do
+      if zip_has_file "$vendor_file"; then
+        unexpected_vendor_files+=("$vendor_file")
+      fi
+    done
+    if ((${#unexpected_vendor_files[@]} > 0)); then
+      validation_issues+=("VENDOR_LAYOUT=system expects vendor files inside system.img, but the ZIP contains separate vendor files: ${unexpected_vendor_files[*]}")
+    fi
+    ;;
+esac
 
-if ((${#missing_files[@]} > 0)); then
-  echo "Error: ROM zip is missing required files:"
-  printf '  - %s\n' "${missing_files[@]}"
+if ((${#validation_issues[@]} > 0)); then
+  echo "Error: ROM zip does not meet input requirements for VENDOR_LAYOUT=$VENDOR_LAYOUT:"
+  printf '  - %s\n' "${validation_issues[@]}"
   exit 1
 fi
+
+rm -f \
+  boot.img \
+  system.new* system.patch.dat system.transfer.list \
+  vendor.new* vendor.patch.dat vendor.transfer.list
 
 echo "Unzipping..."
 unzip -o "${TARGET_ZIP}" \
