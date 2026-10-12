@@ -7,31 +7,9 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 source work/config
-
-case "${VENDOR_LAYOUT:-}" in
-  separate)
-    VENDOR_IMAGE="work/vendor.img"
-    ;;
-  system)
-    VENDOR_IMAGE="work/system.img"
-    ;;
-esac
-
-TMPDIR="$(mktemp -d)"
-echo "Mounting $VENDOR_IMAGE to $TMPDIR..."
-IMAGE_MOUNTED=0
-cleanup() {
-  if [[ "$IMAGE_MOUNTED" -eq 1 ]]; then
-    echo "Unmounting..."
-    umount "$TMPDIR"
-    IMAGE_MOUNTED=0
-  fi
-  rmdir "$TMPDIR" 2>/dev/null || true
-}
-trap cleanup EXIT
-mount "$VENDOR_IMAGE" "$TMPDIR"
-IMAGE_MOUNTED=1
-MOUNT_ROOT="$(realpath -e -- "$TMPDIR")"
+source bin/lib/vendor_image.sh
+trap cleanup_vendor_image EXIT
+mount_vendor_image
 
 patch_vendor_file_contexts() {
   local contexts_file="$1"
@@ -44,13 +22,7 @@ patch_vendor_file_contexts() {
   echo "/dev/block/platform/soc/$MICROSD_ADDR/by-name/microsd_userdata u:object_r:userdata_block_device:s0" >> "$contexts_file"
 }
 
-VENDORFILECONTEXTSFILE=""
-for candidate in "$MOUNT_ROOT" "$MOUNT_ROOT/vendor" "$MOUNT_ROOT/system/vendor"; do
-  if [[ -f "$candidate/etc/selinux/vendor_file_contexts" ]]; then
-    VENDORFILECONTEXTSFILE="$candidate/etc/selinux/vendor_file_contexts"
-    break
-  fi
-done
+VENDORFILECONTEXTSFILE="$(find_vendor_file etc/selinux/vendor_file_contexts || true)"
 
 RAMDISK_ROOT="Android_boot_image_editor/build/unzip_boot/root"
 RAMDISK_CONTEXTS_FILE="$RAMDISK_ROOT/vendor_file_contexts"
