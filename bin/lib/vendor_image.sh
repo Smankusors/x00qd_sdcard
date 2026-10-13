@@ -1,3 +1,5 @@
+source bin/lib/image_file.sh
+
 mount_vendor_image() {
   case "${VENDOR_LAYOUT:-}" in
     separate)
@@ -26,9 +28,13 @@ cleanup_vendor_image() {
   fi
 }
 
+# System images vary in where vendor files live. Search vendor-scoped roots
+# first so a same-named file at the image root cannot shadow vendor config.
+# Resolve every match here because callers edit the returned files in place.
 find_vendor_file() {
   local relative_path="$1"
   local candidate
+  local resolved
   local -a candidates
 
   if [[ "$VENDOR_LAYOUT" == separate ]]; then
@@ -42,9 +48,13 @@ find_vendor_file() {
   fi
 
   for candidate in "${candidates[@]}"; do
-    if [[ -f "$candidate/$relative_path" ]]; then
-      printf '%s\n' "$candidate/$relative_path"
-      return 0
+    [[ -d "$candidate" ]] || continue
+    if [[ -e "$candidate/$relative_path" || -L "$candidate/$relative_path" ]]; then
+      if resolved="$(resolve_image_file "$candidate" "$relative_path")"; then
+        printf '%s\n' "$resolved"
+        return 0
+      fi
+      return 1
     fi
   done
 
