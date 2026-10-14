@@ -8,6 +8,7 @@ fi
 
 source work/config
 source bin/lib/vendor_image.sh
+source bin/lib/boot_image.sh
 trap cleanup_vendor_image EXIT
 mount_vendor_image
 
@@ -35,9 +36,7 @@ if [[ -n "$VENDORFILECONTEXTSFILE" ]]; then
   rm "$VENDORFILECONTEXTS_BACKUP"
 elif [[ -f "$RAMDISK_CONTEXTS_FILE" ]]; then
   patch_vendor_file_contexts "$RAMDISK_CONTEXTS_FILE"
-  echo "Repacking boot ramdisk..."
-  cp work/boot.img Android_boot_image_editor/boot.img
-  ./Android_boot_image_editor/gradlew -p Android_boot_image_editor pack
+  repack_boot_image
 else
   echo "Error: vendor_file_contexts not found in $VENDOR_IMAGE or $RAMDISK_CONTEXTS_FILE."
   exit 1
