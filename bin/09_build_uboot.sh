@@ -17,7 +17,7 @@ BOOTIMG_PAGESIZE="4096"
 
 TEMPDIR="$(mktemp -d)"
 echo "Downloading u-boot source to $TEMPDIR..."
-curl -L $REPO/archive/$COMMIT.tar.gz | tar -xzf - -C $TEMPDIR
+curl --fail --location $REPO/archive/$COMMIT.tar.gz | tar -xzf - -C $TEMPDIR
 
 cd $TEMPDIR/u-boot-$COMMIT
 echo "Configuring u-boot..."
