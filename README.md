@@ -192,7 +192,9 @@ To get U-Boot to automatically boot Android from the microSD, we can replace ste
 
 ## Debugging Early Android Boot Issues
 
-The optional log patch in step 6 requires `vendor_sepolicy.cil`. Run it before step 7.
+Run the optional log patch in step 6 before step 7. It supports split-policy ROMs with `vendor_sepolicy.cil` and legacy monolithic-policy ROMs with a compiled `/sepolicy` in the boot ramdisk. The monolithic path uses `sepolicy-inject`, which is included when you rebuild the Docker image.
+
+The ROM must include the `su` SELinux domain and the policy types used by the logging rules. If the monolithic policy format or types are unsupported, the patch command stops with an error before replacing the policy.
 
 Then choose one boot method:
 

@@ -55,5 +55,16 @@ RUN apt update \
   && curl --fail --location https://github.com/PabloCastellano/extract-dtb/archive/ab824ac0993efc03a3a9201c5c03f54fda4bcfd0.tar.gz | tar -xzvf - \
   && mv extract-dtb-ab824ac0993efc03a3a9201c5c03f54fda4bcfd0 extract-dtb \
   \
+# For patching monolithic SELinux policies with sepolicy-inject.
+  && curl --fail --location https://raw.githubusercontent.com/wiki/SELinuxProject/selinux/files/releases/20161014/libsepol-2.6.tar.gz --output /tmp/libsepol-2.6.tar.gz \
+  && echo "d856d6506054f52abeaa3543ea2f2344595a3dc05d0d873ed7f724f7a16b1874  /tmp/libsepol-2.6.tar.gz" | sha256sum --check - \
+  && tar -xzf /tmp/libsepol-2.6.tar.gz \
+  && make -C libsepol-2.6 CFLAGS="-Wall -Wshadow -O2 -pipe -std=gnu11 -fcommon" \
+  && curl --fail --location https://github.com/phhusson/sepolicy-inject/archive/76a26a4ac7a033d5ebed6f2a3c92c036b3c0002c.tar.gz | tar -xzvf - \
+  && mv sepolicy-inject-76a26a4ac7a033d5ebed6f2a3c92c036b3c0002c sepolicy-inject \
+  && make -C sepolicy-inject LIBDIR=../libsepol-2.6/src CFLAGS="-g -Wall -Wshadow -O2 -pipe -std=gnu11 -I/root/libsepol-2.6/include" \
+  && install -m 0755 sepolicy-inject/sepolicy-inject /usr/local/bin/sepolicy-inject \
+  && rm -f /tmp/libsepol-2.6.tar.gz \
+  \
 # Cleanup to save space
   && apt clean

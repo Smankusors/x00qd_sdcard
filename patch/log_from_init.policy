@@ -1,0 +1,12 @@
+# sepolicy-inject arguments: source_type target_type class permissions
+init su process noatsecure,rlimitinh,siginh,transition
+su kernel system syslog_read
+su kmsg_device chr_file open,read
+su logcat_exec file execute,execute_no_trans,getattr,open,read
+su logd unix_stream_socket connectto
+su logdr_socket sock_file write
+su su capability sys_resource
+su shell_exec file entrypoint,execute,getattr,read
+su toolbox_exec file execute,execute_no_trans,getattr,open,read
+su vendor_file dir add_name,write
+su vendor_file file append,create,ioctl
