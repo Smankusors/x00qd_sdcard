@@ -36,25 +36,25 @@ echo "Mounting ${DEVICE}1 partition..."
 mount ${DEVICE}1 "$BOOTMOUNTDIR"
 
 echo "Setting up folder structure..."
-mkdir -p "$BOOTMOUNTDIR/boot"
-mkdir -p "$BOOTMOUNTDIR/boot/extlinux"
+mkdir -p "$BOOTMOUNTDIR"
+mkdir -p "$BOOTMOUNTDIR/extlinux"
 
 BOOT_JSON=~/Android_boot_image_editor/build/unzip_boot/boot.json
-EXTLINUX_CONF="$BOOTMOUNTDIR/boot/extlinux/extlinux.conf"
+EXTLINUX_CONF="$BOOTMOUNTDIR/extlinux/extlinux.conf"
 echo "Writing extlinux configuration..."
 cp patch/extlinux.conf.template "$EXTLINUX_CONF"
-cp patch/fstab-microsd.dtbo "$BOOTMOUNTDIR/boot/fstab-microsd.dtbo"
+cp patch/fstab-microsd.dtbo "$BOOTMOUNTDIR/fstab-microsd.dtbo"
 if [[ "$DT_MOUNT_MODE" == "rw" ]]; then
-  FDTOVERLAYS="/boot/fstab-microsd.dtbo /boot/fstab-microsd-rw.dtbo"
-  cp patch/fstab-microsd-rw.dtbo "$BOOTMOUNTDIR/boot/fstab-microsd-rw.dtbo"
+  FDTOVERLAYS="/fstab-microsd.dtbo /fstab-microsd-rw.dtbo"
+  cp patch/fstab-microsd-rw.dtbo "$BOOTMOUNTDIR/fstab-microsd-rw.dtbo"
 else
-  FDTOVERLAYS="/boot/fstab-microsd.dtbo"
+  FDTOVERLAYS="/fstab-microsd.dtbo"
 fi
 python3 bin/render_extlinux_config.py "$BOOT_JSON" "$EXTLINUX_CONF" "$FDTOVERLAYS"
 
 echo "Copying kernel and ramdisk..."
-cp Android_boot_image_editor/build/unzip_boot/kernel "$BOOTMOUNTDIR/boot/kernel"
-cp Android_boot_image_editor/build/unzip_boot/ramdisk.img.gz "$BOOTMOUNTDIR/boot/ramdisk.img.gz"
+cp Android_boot_image_editor/build/unzip_boot/kernel "$BOOTMOUNTDIR/kernel"
+cp Android_boot_image_editor/build/unzip_boot/ramdisk.img.gz "$BOOTMOUNTDIR/ramdisk.img.gz"
 
 echo "Extracting and copying device tree blob..."
 TEMPDTBDIR="$(mktemp -d)"
@@ -62,7 +62,7 @@ echo "TEMPDTBDIR=$TEMPDTBDIR"
 python3 extract-dtb/extract_dtb/extract_dtb.py -o ${TEMPDTBDIR} Android_boot_image_editor/build/unzip_boot/kernel
 DTBFILE=$(select_dtb $TEMPDTBDIR)
 echo "Using DTB file: $DTBFILE"
-cp "$DTBFILE" "$BOOTMOUNTDIR/boot/dtb"
+cp "$DTBFILE" "$BOOTMOUNTDIR/dtb"
 
 echo "Syncing and cleaning up..."
 sync

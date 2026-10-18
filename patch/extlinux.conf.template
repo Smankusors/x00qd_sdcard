@@ -4,8 +4,8 @@ PROMPT 1
 
 LABEL android
         MENU LABEL Android Boot
-        LINUX /boot/kernel
-        INITRD /boot/ramdisk.img.gz
-        FDT /boot/dtb
+        LINUX /kernel
+        INITRD /ramdisk.img.gz
+        FDT /dtb
         FDTOVERLAYS [FDTOVERLAYS]
         APPEND [CMDLINE]

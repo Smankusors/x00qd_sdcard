@@ -35,7 +35,7 @@ SYSTEM_PARTITION_END=$(( SYSTEM_PARTITION_START + BOARD_SYSTEMIMAGE_PARTITION_SI
 
 PARTITION_ARGS=(
   mklabel gpt
-  mkpart microsd_boot ext4 "${BOOT_PARTITION_START}B" "$(( SYSTEM_PARTITION_START - 1 ))B"
+  mkpart microsd_boot ext2 "${BOOT_PARTITION_START}B" "$(( SYSTEM_PARTITION_START - 1 ))B"
   mkpart microsd_system ext4 "${SYSTEM_PARTITION_START}B" "${SYSTEM_PARTITION_END}B"
 )
 
@@ -57,7 +57,7 @@ set -x
 parted "$DEVICE" --script "${PARTITION_ARGS[@]}"
 set +x
 
-echo "Formatting boot partition (${DEVICE}1) as ext4..."
-mkfs.ext4 -F -O dir_nlink,extra_isize,has_journal,extent,uninit_bg "${DEVICE}1"
+echo "Formatting boot partition (${DEVICE}1) as ext2..."
+mkfs.ext2 -F "${DEVICE}1"
 
 echo "Done."
