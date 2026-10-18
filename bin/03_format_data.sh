@@ -63,7 +63,7 @@ echo "Formatting cache partition ($CACHE_PARTITION) as $CACHE_FS..."
 if [[ "$CACHE_FS" == "f2fs" ]]; then
   mkfs.f2fs -f "$CACHE_PARTITION"
 elif [[ "$CACHE_FS" == "ext4" ]]; then
-  mkfs.ext4 -F -O dir_nlink,extra_isize,has_journal,extent,uninit_bg "$CACHE_PARTITION"
+  mkfs.ext4 -F -O dir_nlink,extra_isize,has_journal,extent,uninit_bg,^metadata_csum_seed,^orphan_file "$CACHE_PARTITION"
 fi
 
 echo "Formatting userdata partition ($USERDATA_PARTITION) as $USERDATA_FS..."
@@ -75,9 +75,9 @@ if [[ "$USERDATA_FS" == "f2fs" ]]; then
   fi
 elif [[ "$USERDATA_FS" == "ext4" ]]; then
   if [[ "$SUPPORTS_VERITY" == true ]]; then
-    mkfs.ext4 -F -O 64bit,dir_nlink,encrypt,extent,extra_isize,has_journal,metadata_csum,project,quota,verity "$USERDATA_PARTITION"
+    mkfs.ext4 -F -O 64bit,dir_nlink,encrypt,extent,extra_isize,has_journal,metadata_csum,project,quota,verity,^metadata_csum_seed,^orphan_file "$USERDATA_PARTITION"
   else
-    mkfs.ext4 -F -O 64bit,dir_nlink,encrypt,extent,extra_isize,has_journal,metadata_csum,project,quota "$USERDATA_PARTITION"
+    mkfs.ext4 -F -O 64bit,dir_nlink,encrypt,extent,extra_isize,has_journal,metadata_csum,project,quota,^metadata_csum_seed,^orphan_file "$USERDATA_PARTITION"
   fi
 fi
 
