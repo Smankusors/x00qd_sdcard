@@ -7,5 +7,5 @@ LABEL android
         LINUX /kernel
         INITRD /ramdisk.img.gz
         FDT /dtb
-        FDTOVERLAYS [FDTOVERLAYS]
+        FDTOVERLAYS /fstab-microsd.dtbo
         APPEND [CMDLINE]

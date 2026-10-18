@@ -11,9 +11,6 @@
 				system {
 					compatible = "android,system";
 					dev = "/dev/block/platform/soc/[EMMC_ADDR]/../[MICROSD_ADDR]/by-name/microsd_system";
-					type = "ext4";
-					mnt_flags = "ro,barrier=1,discard";
-					fsmgr_flags = "wait";
 					status = "ok";
 				};
 
@@ -22,7 +19,7 @@
 					dev = "/dev/block/platform/soc/[EMMC_ADDR]/by-name/cache";
 					type = "ext4";
 					mnt_point = "/internalcachesothatwecanbootfromsdcard";
-					mnt_flags = "ro,barrier=1,discard";
+					mnt_flags = "ro";
 					fsmgr_flags = "wait";
 					status = "ok";
 				};

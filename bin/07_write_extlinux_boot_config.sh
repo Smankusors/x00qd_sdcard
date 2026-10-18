@@ -15,6 +15,7 @@ if [[ -z "$1" ]]; then
 fi
 
 source work/config
+source bin/lib/dtb_fstab.sh
 
 DEVICE="$1"
 
@@ -24,9 +25,9 @@ if [[ ! -b "$DEVICE" ]]; then
 fi
 
 if [[ "$2" == "--rw" ]]; then
-  DT_MOUNT_MODE="rw"
+  SET_MOUNT_RW=1
 else
-  DT_MOUNT_MODE="ro"
+  SET_MOUNT_RW=0
 fi
 
 BOOTMOUNTDIR="$(mktemp -d)"
@@ -44,13 +45,7 @@ EXTLINUX_CONF="$BOOTMOUNTDIR/extlinux/extlinux.conf"
 echo "Writing extlinux configuration..."
 cp patch/extlinux.conf.template "$EXTLINUX_CONF"
 cp patch/fstab-microsd.dtbo "$BOOTMOUNTDIR/fstab-microsd.dtbo"
-if [[ "$DT_MOUNT_MODE" == "rw" ]]; then
-  FDTOVERLAYS="/fstab-microsd.dtbo /fstab-microsd-rw.dtbo"
-  cp patch/fstab-microsd-rw.dtbo "$BOOTMOUNTDIR/fstab-microsd-rw.dtbo"
-else
-  FDTOVERLAYS="/fstab-microsd.dtbo"
-fi
-python3 bin/render_extlinux_config.py "$BOOT_JSON" "$EXTLINUX_CONF" "$FDTOVERLAYS"
+python3 bin/render_extlinux_config.py "$BOOT_JSON" "$EXTLINUX_CONF"
 
 echo "Copying kernel and ramdisk..."
 cp Android_boot_image_editor/build/unzip_boot/kernel "$BOOTMOUNTDIR/kernel"
@@ -62,6 +57,13 @@ echo "TEMPDTBDIR=$TEMPDTBDIR"
 python3 extract-dtb/extract_dtb/extract_dtb.py -o ${TEMPDTBDIR} Android_boot_image_editor/build/unzip_boot/kernel
 DTBFILE=$(select_dtb $TEMPDTBDIR)
 echo "Using DTB file: $DTBFILE"
+if [[ "$SET_MOUNT_RW" -eq 1 ]]; then
+  if [[ "$VENDOR_LAYOUT" == "separate" ]]; then
+    set_dtb_mount_rw "$DTBFILE" system vendor
+  else
+    set_dtb_mount_rw "$DTBFILE" system
+  fi
+fi
 cp "$DTBFILE" "$BOOTMOUNTDIR/dtb"
 
 echo "Syncing and cleaning up..."

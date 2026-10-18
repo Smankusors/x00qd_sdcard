@@ -2,12 +2,13 @@
 set -e
 
 if [[ "$1" == "--rw" ]]; then
-  DT_MOUNT_MODE="rw"
+  SET_MOUNT_RW=1
 else
-  DT_MOUNT_MODE="ro"
+  SET_MOUNT_RW=0
 fi
 
 source work/config
+source bin/lib/dtb_fstab.sh
 
 echo "Extracting device trees..."
 TMPDIR="$(mktemp -d)"
@@ -17,11 +18,14 @@ python3 extract-dtb/extract_dtb/extract_dtb.py -o $TMPDIR/out $TMPDIR/kernel
 
 echo "Patching device trees..."
 for file in $TMPDIR/out/*.dtb; do
-  if [[ "$DT_MOUNT_MODE" == "rw" ]]; then
-    fdtoverlay -i $file -o $file patch/fstab-microsd.dtbo patch/fstab-microsd-rw.dtbo
-  else
-    fdtoverlay -i $file -o $file patch/fstab-microsd.dtbo
+  if [[ "$SET_MOUNT_RW" -eq 1 ]]; then
+    if [[ "$VENDOR_LAYOUT" == "separate" ]]; then
+      set_dtb_mount_rw "$file" system vendor
+    else
+      set_dtb_mount_rw "$file" system
+    fi
   fi
+  fdtoverlay -i "$file" -o "$file" patch/fstab-microsd.dtbo
 done
 
 echo "Concatenating device trees..."
