@@ -1,4 +1,4 @@
-FROM debian:trixie-20251229
+FROM debian:trixie-20261005
 
 WORKDIR /root
 ENV PATH=/root/bin:$PATH
