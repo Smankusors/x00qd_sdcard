@@ -30,6 +30,21 @@ case "${VENDOR_LAYOUT:-}" in
     ;;
 esac
 
+# Android's forceencrypt=footer stores the crypto footer in the last 16 KiB
+# of userdata. Keep the filesystem itself within the preceding space so
+# vold can encrypt it in place on first boot.
+CRYPT_FOOTER_SIZE_BYTES=$((16 * 1024))
+EXT4_BLOCK_SIZE_BYTES=$((4 * 1024))
+SECTOR_SIZE_BYTES=512
+USERDATA_PARTITION_SIZE_BYTES=$(blockdev --getsize64 "$USERDATA_PARTITION")
+if [[ ! "$USERDATA_PARTITION_SIZE_BYTES" =~ ^[0-9]+$ ]] || (( USERDATA_PARTITION_SIZE_BYTES <= CRYPT_FOOTER_SIZE_BYTES )); then
+  echo "Error: Could not determine a usable size for $USERDATA_PARTITION."
+  exit 1
+fi
+USERDATA_FS_SIZE_BYTES=$((USERDATA_PARTITION_SIZE_BYTES - CRYPT_FOOTER_SIZE_BYTES))
+USERDATA_FS_BLOCKS=$((USERDATA_FS_SIZE_BYTES / EXT4_BLOCK_SIZE_BYTES))
+USERDATA_FS_SECTORS=$((USERDATA_FS_SIZE_BYTES / SECTOR_SIZE_BYTES))
+
 KERNEL_CONFIG_FILE="Android_boot_image_editor/build/unzip_boot/kernel_configs.txt"
 KERNEL_IMAGE_FILE="Android_boot_image_editor/build/unzip_boot/kernel"
 if [[ -f "$KERNEL_CONFIG_FILE" && -f "$KERNEL_IMAGE_FILE" ]]; then
@@ -87,11 +102,12 @@ elif [[ "$CACHE_FS" == "ext4" ]]; then
 fi
 
 echo "Formatting userdata partition ($USERDATA_PARTITION) as $USERDATA_FS..."
+echo "Leaving the final 16 KiB outside the userdata filesystem."
 if [[ "$USERDATA_FS" == "f2fs" ]]; then
   if [[ "$SUPPORTS_VERITY" == true ]]; then
-    mkfs.f2fs -f -O encrypt,verity "$USERDATA_PARTITION"
+    mkfs.f2fs -f -O encrypt,verity "$USERDATA_PARTITION" "$USERDATA_FS_SECTORS"
   else
-    mkfs.f2fs -f -O encrypt "$USERDATA_PARTITION"
+    mkfs.f2fs -f -O encrypt "$USERDATA_PARTITION" "$USERDATA_FS_SECTORS"
   fi
 elif [[ "$USERDATA_FS" == "ext4" ]]; then
   EXT4_USERDATA_FEATURES="64bit,dir_nlink,encrypt,extent,extra_isize,has_journal,metadata_csum,quota,^metadata_csum_seed,^orphan_file"
@@ -101,7 +117,7 @@ elif [[ "$USERDATA_FS" == "ext4" ]]; then
   if [[ "$SUPPORTS_VERITY" == true ]]; then
     EXT4_USERDATA_FEATURES+=",verity"
   fi
-  mkfs.ext4 -F -O "$EXT4_USERDATA_FEATURES" "$USERDATA_PARTITION"
+  mkfs.ext4 -F -b "$EXT4_BLOCK_SIZE_BYTES" -O "$EXT4_USERDATA_FEATURES" "$USERDATA_PARTITION" "$USERDATA_FS_BLOCKS"
 fi
 
 echo "Partitioning and formatting completed successfully on $DEVICE."
