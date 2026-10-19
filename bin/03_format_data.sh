@@ -31,15 +31,35 @@ case "${VENDOR_LAYOUT:-}" in
 esac
 
 KERNEL_CONFIG_FILE="Android_boot_image_editor/build/unzip_boot/kernel_configs.txt"
-if [[ -f "$KERNEL_CONFIG_FILE" ]]; then
+KERNEL_IMAGE_FILE="Android_boot_image_editor/build/unzip_boot/kernel"
+if [[ -f "$KERNEL_CONFIG_FILE" && -f "$KERNEL_IMAGE_FILE" ]]; then
   if grep -q "CONFIG_FS_VERITY=y" "$KERNEL_CONFIG_FILE"; then
     SUPPORTS_VERITY=true
   else
     SUPPORTS_VERITY=false
   fi
   echo "Kernel supports verity: $SUPPORTS_VERITY"
+
+  # CONFIG_QUOTA enables generic quotas, not necessarily ext4 project quotas.
+  # Only add project when its handler is present in the compiled kernel image.
+  SUPPORTS_PROJECT_QUOTA=false
+  PROJECT_QUOTA_STATUS="unknown; omitting project feature"
+  KERNEL_MIME_TYPE=$(file -b --mime-type "$KERNEL_IMAGE_FILE")
+  KERNEL_PROJECT_SYMBOL=$(
+    case "$KERNEL_MIME_TYPE" in
+      application/gzip) gzip -cd "$KERNEL_IMAGE_FILE" 2>/dev/null ;;
+      application/x-lz4|application/lz4) lz4 -dc "$KERNEL_IMAGE_FILE" 2>/dev/null ;;
+      application/x-xz) xz -dc "$KERNEL_IMAGE_FILE" 2>/dev/null ;;
+      *) cat "$KERNEL_IMAGE_FILE" ;;
+    esac | grep -a -o -F 'ext4_ioctl_setproject' || true
+  )
+  if [[ -n "$KERNEL_PROJECT_SYMBOL" ]]; then
+    SUPPORTS_PROJECT_QUOTA=true
+    PROJECT_QUOTA_STATUS="detected in kernel symbols"
+  fi
+  echo "Ext4 project quota support: $PROJECT_QUOTA_STATUS"
 else
-  echo "Error: Kernel configuration file not found at $KERNEL_CONFIG_FILE."
+  echo "Error: Kernel config or image is missing ($KERNEL_CONFIG_FILE, $KERNEL_IMAGE_FILE)."
   exit 1
 fi
 
@@ -74,11 +94,14 @@ if [[ "$USERDATA_FS" == "f2fs" ]]; then
     mkfs.f2fs -f -O encrypt "$USERDATA_PARTITION"
   fi
 elif [[ "$USERDATA_FS" == "ext4" ]]; then
-  if [[ "$SUPPORTS_VERITY" == true ]]; then
-    mkfs.ext4 -F -O 64bit,dir_nlink,encrypt,extent,extra_isize,has_journal,metadata_csum,project,quota,verity,^metadata_csum_seed,^orphan_file "$USERDATA_PARTITION"
-  else
-    mkfs.ext4 -F -O 64bit,dir_nlink,encrypt,extent,extra_isize,has_journal,metadata_csum,project,quota,^metadata_csum_seed,^orphan_file "$USERDATA_PARTITION"
+  EXT4_USERDATA_FEATURES="64bit,dir_nlink,encrypt,extent,extra_isize,has_journal,metadata_csum,quota,^metadata_csum_seed,^orphan_file"
+  if [[ "$SUPPORTS_PROJECT_QUOTA" == true ]]; then
+    EXT4_USERDATA_FEATURES+=",project"
   fi
+  if [[ "$SUPPORTS_VERITY" == true ]]; then
+    EXT4_USERDATA_FEATURES+=",verity"
+  fi
+  mkfs.ext4 -F -O "$EXT4_USERDATA_FEATURES" "$USERDATA_PARTITION"
 fi
 
 echo "Partitioning and formatting completed successfully on $DEVICE."

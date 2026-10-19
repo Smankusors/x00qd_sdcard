@@ -11,6 +11,7 @@ RUN apt update \
     git \
     e2fsprogs \
     f2fs-tools \
+    file \
     jq \
     mkbootimg \
     parted \
