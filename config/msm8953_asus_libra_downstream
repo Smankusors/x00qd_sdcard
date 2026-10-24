@@ -1,0 +1,12 @@
+source config/msm8953_asus_libra
+
+select_dtb() {
+  local file
+
+  for file in "$1"/*.dtb; do
+    if strings "$file" | grep -Fq "LIBRA"; then
+      echo "$file"
+      return
+    fi
+  done
+}
