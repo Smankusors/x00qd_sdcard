@@ -40,7 +40,8 @@ echo "Setting up folder structure..."
 mkdir -p "$BOOTMOUNTDIR"
 mkdir -p "$BOOTMOUNTDIR/extlinux"
 
-BOOT_JSON=~/Android_boot_image_editor/build/unzip_boot/boot.json
+BOOT_IMAGE_DIR=Android_boot_image_editor/build/unzip_boot
+BOOT_JSON="$BOOT_IMAGE_DIR/boot.json"
 EXTLINUX_CONF="$BOOTMOUNTDIR/extlinux/extlinux.conf"
 echo "Writing extlinux configuration..."
 cp patch/extlinux.conf.template "$EXTLINUX_CONF"
@@ -48,14 +49,34 @@ cp patch/fstab-microsd.dtbo "$BOOTMOUNTDIR/fstab-microsd.dtbo"
 python3 bin/render_extlinux_config.py "$BOOT_JSON" "$EXTLINUX_CONF"
 
 echo "Copying kernel and ramdisk..."
-cp Android_boot_image_editor/build/unzip_boot/kernel "$BOOTMOUNTDIR/kernel"
-cp Android_boot_image_editor/build/unzip_boot/ramdisk.img.gz "$BOOTMOUNTDIR/ramdisk.img.gz"
+cp "$BOOT_IMAGE_DIR/kernel" "$BOOTMOUNTDIR/kernel"
+cp "$BOOT_IMAGE_DIR/ramdisk.img.gz" "$BOOTMOUNTDIR/ramdisk.img.gz"
 
 echo "Extracting and copying device tree blob..."
 TEMPDTBDIR="$(mktemp -d)"
 echo "TEMPDTBDIR=$TEMPDTBDIR"
-python3 extract-dtb/extract_dtb/extract_dtb.py -o ${TEMPDTBDIR} Android_boot_image_editor/build/unzip_boot/kernel
-DTBFILE=$(select_dtb $TEMPDTBDIR)
+if [[ -s "$BOOT_IMAGE_DIR/dtb" ]]; then
+  DTB_SOURCE="$BOOT_IMAGE_DIR/dtb"
+  echo "Extracting device trees from boot image DTB..."
+else
+  DTB_SOURCE="$BOOT_IMAGE_DIR/kernel"
+  echo "Extracting appended device trees from kernel..."
+fi
+python3 extract-dtb/extract_dtb/extract_dtb.py -o "$TEMPDTBDIR" "$DTB_SOURCE"
+
+shopt -s nullglob
+DTBFILES=("$TEMPDTBDIR"/*.dtb)
+shopt -u nullglob
+if [[ ${#DTBFILES[@]} -eq 0 ]]; then
+  echo "Error: no device tree blobs found in $DTB_SOURCE." >&2
+  exit 1
+fi
+
+DTBFILE="$(select_dtb "$TEMPDTBDIR")"
+if [[ -z "$DTBFILE" || ! -f "$DTBFILE" ]]; then
+  echo "Error: unable to select a device tree blob from $TEMPDTBDIR for this board." >&2
+  exit 1
+fi
 echo "Using DTB file: $DTBFILE"
 if [[ "$SET_MOUNT_RW" -eq 1 ]]; then
   if [[ "$VENDOR_LAYOUT" == "separate" ]]; then
