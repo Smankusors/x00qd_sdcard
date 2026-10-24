@@ -30,32 +30,48 @@ cleanup_vendor_image() {
 
 # System images vary in where vendor files live. Search vendor-scoped roots
 # first so a same-named file at the image root cannot shadow vendor config.
-# Resolve every match here because callers edit the returned files in place.
-find_vendor_file() {
-  local relative_path="$1"
-  local candidate
-  local resolved
-  local -a candidates
-
+# Resolve matches before callers edit a file or create one in a directory.
+vendor_image_roots() {
   if [[ "$VENDOR_LAYOUT" == separate ]]; then
-    candidates=("$VENDOR_MOUNT_ROOT")
+    VENDOR_SEARCH_ROOTS=("$VENDOR_MOUNT_ROOT")
   else
-    candidates=(
+    VENDOR_SEARCH_ROOTS=(
       "$VENDOR_MOUNT_ROOT/vendor"
       "$VENDOR_MOUNT_ROOT/system/vendor"
       "$VENDOR_MOUNT_ROOT"
     )
   fi
+}
 
-  for candidate in "${candidates[@]}"; do
+find_vendor_path() {
+  local relative_path="$1"
+  local candidate
+  local destination
+  local resolved
+
+  vendor_image_roots
+  for candidate in "${VENDOR_SEARCH_ROOTS[@]}"; do
     [[ -d "$candidate" ]] || continue
-    if [[ -e "$candidate/$relative_path" || -L "$candidate/$relative_path" ]]; then
-      if resolved="$(resolve_image_file "$candidate" "$relative_path")"; then
-        printf '%s\n' "$resolved"
-        return 0
+    destination="$candidate/$relative_path"
+    [[ -e "$destination" || -L "$destination" ]] || continue
+
+    if [[ -d "$destination" ]]; then
+      resolved="$(realpath -e -- "$destination")" || {
+        echo "Missing image directory: $destination" >&2
+        return 2
+      }
+      if [[ "$resolved" != "$destination" ]]; then
+        echo "Refusing unsafe image directory: $destination" >&2
+        return 2
       fi
-      return 1
+    else
+      if ! resolved="$(resolve_image_file "$candidate" "$relative_path")"; then
+        return 1
+      fi
     fi
+
+    printf '%s\n' "$resolved"
+    return 0
   done
 
   return 1

@@ -26,8 +26,16 @@ trap cleanup EXIT
 mount_vendor_image
 
 INIT_QCOM_RC_PATH="etc/init/hw/init.qcom.rc"
-VENDOR_SEPOLICY_CIL="$(find_vendor_file etc/selinux/vendor_sepolicy.cil || true)"
-INIT_QCOM_RC_FILE="$(find_vendor_file "$INIT_QCOM_RC_PATH" || true)"
+VENDOR_SEPOLICY_CIL="$(find_vendor_path etc/selinux/vendor_sepolicy.cil || true)"
+if [[ -n "$VENDOR_SEPOLICY_CIL" && ! -f "$VENDOR_SEPOLICY_CIL" ]]; then
+  echo "Error: expected a vendor policy file, but found a directory: $VENDOR_SEPOLICY_CIL." >&2
+  exit 1
+fi
+INIT_QCOM_RC_FILE="$(find_vendor_path "$INIT_QCOM_RC_PATH" || true)"
+if [[ -n "$INIT_QCOM_RC_FILE" && ! -f "$INIT_QCOM_RC_FILE" ]]; then
+  echo "Error: expected a vendor init rc file, but found a directory: $INIT_QCOM_RC_FILE." >&2
+  exit 1
+fi
 INIT_QCOM_RC_IN_RAMDISK=0
 if [[ -z "$INIT_QCOM_RC_FILE" ]]; then
   for candidate in \

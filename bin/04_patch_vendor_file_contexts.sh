@@ -23,7 +23,11 @@ patch_vendor_file_contexts() {
   echo "/dev/block/platform/soc/$MICROSD_ADDR/by-name/microsd_userdata u:object_r:userdata_block_device:s0" >> "$contexts_file"
 }
 
-VENDORFILECONTEXTSFILE="$(find_vendor_file etc/selinux/vendor_file_contexts || true)"
+VENDORFILECONTEXTSFILE="$(find_vendor_path etc/selinux/vendor_file_contexts || true)"
+if [[ -n "$VENDORFILECONTEXTSFILE" && ! -f "$VENDORFILECONTEXTSFILE" ]]; then
+  echo "Error: expected vendor_file_contexts to be a file, but found a directory: $VENDORFILECONTEXTSFILE." >&2
+  exit 1
+fi
 
 RAMDISK_ROOT="Android_boot_image_editor/build/unzip_boot/root"
 RAMDISK_CONTEXTS_FILE="$RAMDISK_ROOT/vendor_file_contexts"

@@ -18,9 +18,13 @@ trap cleanup_vendor_image EXIT
 mount_vendor_image
 
 echo "Patching fstab.qcom..."
-FSTABQCOMFILE="$(find_vendor_file etc/fstab.qcom || true)"
+FSTABQCOMFILE="$(find_vendor_path etc/fstab.qcom || true)"
 if [[ -z "$FSTABQCOMFILE" ]]; then
   echo "Error: fstab.qcom not found in $VENDOR_IMAGE."
+  exit 1
+fi
+if [[ ! -f "$FSTABQCOMFILE" ]]; then
+  echo "Error: expected fstab.qcom to be a file, but found a directory: $FSTABQCOMFILE." >&2
   exit 1
 fi
 cp -- "$FSTABQCOMFILE" "$FSTABQCOMFILE.bak"
