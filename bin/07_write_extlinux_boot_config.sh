@@ -45,7 +45,6 @@ BOOT_JSON="$BOOT_IMAGE_DIR/boot.json"
 EXTLINUX_CONF="$BOOTMOUNTDIR/extlinux/extlinux.conf"
 echo "Writing extlinux configuration..."
 cp patch/extlinux.conf.template "$EXTLINUX_CONF"
-cp patch/fstab-microsd.dtbo "$BOOTMOUNTDIR/fstab-microsd.dtbo"
 python3 bin/render_extlinux_config.py "$BOOT_JSON" "$EXTLINUX_CONF"
 
 echo "Copying kernel and ramdisk..."
@@ -85,7 +84,7 @@ if [[ "$SET_MOUNT_RW" -eq 1 ]]; then
     set_dtb_mount_rw "$DTBFILE" system
   fi
 fi
-cp "$DTBFILE" "$BOOTMOUNTDIR/dtb"
+fdtoverlay -i "$DTBFILE" -o "$BOOTMOUNTDIR/dtb" patch/fstab-microsd.dtbo
 
 echo "Syncing and cleaning up..."
 sync
