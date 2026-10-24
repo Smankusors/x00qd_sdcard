@@ -31,39 +31,96 @@ if [[ -n "$VENDOR_SEPOLICY_CIL" && ! -f "$VENDOR_SEPOLICY_CIL" ]]; then
   echo "Error: expected a vendor policy file, but found a directory: $VENDOR_SEPOLICY_CIL." >&2
   exit 1
 fi
-INIT_QCOM_RC_FILE="$(find_vendor_path "$INIT_QCOM_RC_PATH" || true)"
-if [[ -n "$INIT_QCOM_RC_FILE" && ! -f "$INIT_QCOM_RC_FILE" ]]; then
-  echo "Error: expected a vendor init rc file, but found a directory: $INIT_QCOM_RC_FILE." >&2
+INIT_RC_IN_VENDOR_INIT=0
+INIT_RC_IN_RAMDISK=0
+VENDOR_INIT_DIR=""
+VENDOR_INIT_METADATA_TEMPLATE=""
+
+INIT_RC_FILE="$(find_vendor_path "$INIT_QCOM_RC_PATH" || true)"
+if [[ -n "$INIT_RC_FILE" && ! -f "$INIT_RC_FILE" ]]; then
+  echo "Error: expected a vendor init rc file, but found a directory: $INIT_RC_FILE." >&2
   exit 1
 fi
-INIT_QCOM_RC_IN_RAMDISK=0
-if [[ -z "$INIT_QCOM_RC_FILE" ]]; then
+
+if [[ -z "$INIT_RC_FILE" ]]; then
+  if VENDOR_INIT_DIR="$(find_vendor_path etc/init)"; then
+    if [[ ! -d "$VENDOR_INIT_DIR" ]]; then
+      echo "Error: expected a vendor init directory, but found a file: $VENDOR_INIT_DIR." >&2
+      exit 1
+    fi
+    for candidate in "$VENDOR_INIT_DIR"/*.rc; do
+      if [[ -f "$candidate" && ! -L "$candidate" ]]; then
+        VENDOR_INIT_METADATA_TEMPLATE="$candidate"
+        break
+      fi
+    done
+  else
+    FIND_VENDOR_INIT_STATUS=$?
+    if [[ "$FIND_VENDOR_INIT_STATUS" -ne 1 ]]; then
+      exit 1
+    fi
+  fi
+
+  if [[ -n "$VENDOR_INIT_METADATA_TEMPLATE" ]]; then
+    # Android imports rc files from vendor/etc/init, so this avoids modifying an
+    # unrelated device-specific rc file.
+    INIT_RC_FILE="$VENDOR_INIT_DIR/zz_debug_logs.rc"
+    INIT_RC_IN_VENDOR_INIT=1
+  fi
+fi
+
+if [[ -z "$INIT_RC_FILE" ]]; then
   for candidate in \
+    "$RAMDISK_ROOT/init.rc" \
+    "$RAMDISK_ROOT/etc/init/hw/init.rc" \
     "$RAMDISK_ROOT/init.qcom.rc" \
     "$RAMDISK_ROOT/etc/init/hw/init.qcom.rc" \
-    "$RAMDISK_ROOT/vendor/etc/init/hw/init.qcom.rc" \
-    "$RAMDISK_ROOT/init.rc" \
-    "$RAMDISK_ROOT/etc/init/hw/init.rc"; do
+    "$RAMDISK_ROOT/vendor/etc/init/hw/init.qcom.rc"; do
     if [[ -f "$candidate" && ! -L "$candidate" ]]; then
-      INIT_QCOM_RC_FILE="$candidate"
-      INIT_QCOM_RC_IN_RAMDISK=1
+      INIT_RC_FILE="$candidate"
+      INIT_RC_IN_RAMDISK=1
       break
     fi
   done
 fi
-if [[ -z "$INIT_QCOM_RC_FILE" ]]; then
-  echo "Error: init.qcom.rc or init.rc not found in $VENDOR_IMAGE or the boot ramdisk." >&2
+
+if [[ -z "$INIT_RC_FILE" ]]; then
+  echo "Error: no vendor init directory, init.qcom.rc, or compatible init.rc found in $VENDOR_IMAGE or the boot ramdisk." >&2
   exit 1
 fi
 
+patch_init_config() {
+  if [[ "$INIT_RC_IN_VENDOR_INIT" -eq 1 ]]; then
+    if [[ -e "$INIT_RC_FILE" || -L "$INIT_RC_FILE" ]]; then
+      local existing_file
+      if ! existing_file="$(find_vendor_path etc/init/zz_debug_logs.rc)"; then
+        echo "Error: refusing to append to unsafe or unreadable $INIT_RC_FILE." >&2
+        return 1
+      fi
+      if [[ ! -f "$existing_file" ]]; then
+        echo "Error: expected a vendor init rc file, but found a directory: $existing_file." >&2
+        return 1
+      fi
+      if [[ "$existing_file" != "$INIT_RC_FILE" ]]; then
+        echo "Error: $INIT_RC_FILE resolves outside the vendor init directory." >&2
+        return 1
+      fi
+    else
+      cp --attributes-only --preserve=all -- "$VENDOR_INIT_METADATA_TEMPLATE" "$INIT_RC_FILE"
+    fi
+  fi
+
+  cat -- patch/log_from_init.rc >> "$INIT_RC_FILE"
+}
+
 if [[ -n "$VENDOR_SEPOLICY_CIL" ]]; then
   VENDOR_ROOT="${VENDOR_SEPOLICY_CIL%/etc/selinux/vendor_sepolicy.cil}"
-  echo "Patching init.qcom.rc..."
-  cat -- patch/log_from_init.rc >> "$INIT_QCOM_RC_FILE"
+  echo "Patching init config: $INIT_RC_FILE"
+  patch_init_config
   echo "Patching split vendor sepolicy..."
   cat -- patch/log_from_init.cil >> "$VENDOR_SEPOLICY_CIL"
   rm -f -- "$VENDOR_ROOT/etc/selinux/precompiled_sepolicy"
-  if [[ "$INIT_QCOM_RC_IN_RAMDISK" -eq 1 ]]; then
+  if [[ "$INIT_RC_IN_RAMDISK" -eq 1 ]]; then
     repack_boot_image
   fi
 else
@@ -93,8 +150,8 @@ else
       -P "$POLICY_TEMP"
   done < patch/log_from_init.policy
 
-  echo "Patching init.qcom.rc..."
-  cat -- patch/log_from_init.rc >> "$INIT_QCOM_RC_FILE"
+  echo "Patching init config: $INIT_RC_FILE"
+  patch_init_config
   mv -- "$POLICY_TEMP" "$MONOLITHIC_POLICY"
   POLICY_TEMP=""
   repack_boot_image
