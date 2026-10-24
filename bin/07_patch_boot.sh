@@ -10,14 +10,25 @@ fi
 source work/config
 source bin/lib/dtb_fstab.sh
 
+BOOT_IMAGE_DIR=Android_boot_image_editor/build/unzip_boot
+BOOT_JSON="$BOOT_IMAGE_DIR/boot.json"
+
 echo "Extracting device trees..."
 TMPDIR="$(mktemp -d)"
 echo "TMPDIR=$TMPDIR"
-cp Android_boot_image_editor/build/unzip_boot/kernel $TMPDIR/kernel
-python3 extract-dtb/extract_dtb/extract_dtb.py -o $TMPDIR/out $TMPDIR/kernel
+cp "$BOOT_IMAGE_DIR/kernel" "$TMPDIR/kernel"
+python3 extract-dtb/extract_dtb/extract_dtb.py -o "$TMPDIR/out" "$TMPDIR/kernel"
+
+shopt -s nullglob
+DTBFILES=("$TMPDIR"/out/*.dtb)
+shopt -u nullglob
+if [[ ${#DTBFILES[@]} -eq 0 ]]; then
+  echo "Error: no appended device tree blobs found in the boot kernel." >&2
+  exit 1
+fi
 
 echo "Patching device trees..."
-for file in $TMPDIR/out/*.dtb; do
+for file in "${DTBFILES[@]}"; do
   if [[ "$SET_MOUNT_RW" -eq 1 ]]; then
     if [[ "$VENDOR_LAYOUT" == "separate" ]]; then
       set_dtb_mount_rw "$file" system vendor
@@ -29,14 +40,14 @@ for file in $TMPDIR/out/*.dtb; do
 done
 
 echo "Concatenating device trees..."
-cat ${TMPDIR}/out/*.dtb > ${TMPDIR}/dtb
+cat "${DTBFILES[@]}" > "$TMPDIR/dtb"
 
 echo "Appending patched device trees..."
-cat ${TMPDIR}/out/00_kernel ${TMPDIR}/dtb > Android_boot_image_editor/build/unzip_boot/kernel
+cat "$TMPDIR/out/00_kernel" "$TMPDIR/dtb" > "$BOOT_IMAGE_DIR/kernel"
 
 echo "Repacking boot.img..."
 getBootImageJSONValue() {
-  jq -r "$1" ~/Android_boot_image_editor/build/unzip_boot/boot.json
+  jq -r "$1" "$BOOT_JSON"
 }
 BOOT_RAMDISK=$(getBootImageJSONValue '.ramdisk.file')
 BOOT_BASE=$(getBootImageJSONValue '.info.loadBase')
@@ -46,14 +57,17 @@ BOOT_KERNEL_OFFSET=$(getBootImageJSONValue '.kernel.loadOffset')
 BOOT_RAMDISK_OFFSET=$(getBootImageJSONValue '.ramdisk.loadOffset')
 BOOT_TAGS_OFFSET=$(getBootImageJSONValue '.info.tagsOffset')
 BOOT_PAGESIZE=$(getBootImageJSONValue '.info.pageSize')
-BOOT_DTB=$(select_dtb "$TMPDIR/out")
+if ! BOOT_DTB="$(select_dtb "$TMPDIR/out")" || [[ ! -f "$BOOT_DTB" ]]; then
+  echo "Error: unable to select a device tree blob from $TMPDIR/out for this board." >&2
+  exit 1
+fi
 BOOT_OS_VERSION=$(getBootImageJSONValue '.info.osVersion')
 BOOT_OS_PATCH_LEVEL=$(getBootImageJSONValue '.info.osPatchLevel')
 
 set -x
 python3 Android_boot_image_editor/aosp/system/tools/mkbootimg/mkbootimg.py \
   --header_version 2 \
-  --kernel Android_boot_image_editor/build/unzip_boot/kernel \
+  --kernel "$BOOT_IMAGE_DIR/kernel" \
   --ramdisk "${BOOT_RAMDISK}" \
   --base "${BOOT_BASE}" \
   --second_offset "${BOOT_SECOND_OFFSET}" \
