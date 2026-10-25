@@ -32,6 +32,8 @@ chcon --reference="$FSTABQCOMFILE" "$FSTABQCOMFILE.bak"
 sed -i "/$MICROSD_ADDR/d" "$FSTABQCOMFILE"
 sed -i "s/\/dev\/block\/bootdevice\/by-name\/userdata/\/dev\/block\/platform\/soc\/$MICROSD_ADDR\/by-name\/microsd_userdata/g" "$FSTABQCOMFILE"
 sed -i "s/\/dev\/block\/bootdevice\/by-name\/cache/\/dev\/block\/platform\/soc\/$MICROSD_ADDR\/by-name\/microsd_cache/g" "$FSTABQCOMFILE"
+sed -i "s/\/dev\/block\/bootdevice\/by-name\/system/\/dev\/block\/platform\/soc\/$MICROSD_ADDR\/by-name\/microsd_system/g" "$FSTABQCOMFILE"
+sed -i "s/\/dev\/block\/bootdevice\/by-name\/vendor/\/dev\/block\/platform\/soc\/$MICROSD_ADDR\/by-name\/microsd_vendor/g" "$FSTABQCOMFILE"
 chcon --reference="$FSTABQCOMFILE.bak" "$FSTABQCOMFILE"
 rm "$FSTABQCOMFILE.bak"
 
