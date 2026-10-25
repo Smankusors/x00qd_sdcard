@@ -14,13 +14,14 @@ mount_vendor_image
 
 patch_vendor_file_contexts() {
   local contexts_file="$1"
+  local block_device_root="${MICROSD_DEVICE_PATH%/}/by-name"
 
   echo "Patching $contexts_file..."
   sed -i 's|^/dev/block/mmcblk1[[:space:]]\+u:object_r:sd_device:s0$|/dev/block/mmcblk1 u:object_r:root_block_device:s0|' "$contexts_file"
   sed -i '/^\/dev\/block\/mmcblk1p1[[:space:]]/d' "$contexts_file"
-  echo "/dev/block/platform/soc/$MICROSD_ADDR/by-name/microsd_system u:object_r:system_block_device:s0" >> "$contexts_file"
-  echo "/dev/block/platform/soc/$MICROSD_ADDR/by-name/microsd_cache u:object_r:cache_block_device:s0" >> "$contexts_file"
-  echo "/dev/block/platform/soc/$MICROSD_ADDR/by-name/microsd_userdata u:object_r:userdata_block_device:s0" >> "$contexts_file"
+  printf '%s u:object_r:system_block_device:s0\n' "$block_device_root/microsd_system" >> "$contexts_file"
+  printf '%s u:object_r:cache_block_device:s0\n' "$block_device_root/microsd_cache" >> "$contexts_file"
+  printf '%s u:object_r:userdata_block_device:s0\n' "$block_device_root/microsd_userdata" >> "$contexts_file"
 }
 
 VENDORFILECONTEXTSFILE="$(find_vendor_path etc/selinux/vendor_file_contexts || true)"

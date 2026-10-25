@@ -1,0 +1,5 @@
+source config/default
+
+EMMC_DEVICE_PATH=/dev/block/platform/soc@0/7824900.mmc
+MICROSD_DEVICE_PATH=/dev/block/platform/soc@0/7864900.mmc
+FSTAB_EMMC_BY_NAME_PATH=$EMMC_DEVICE_PATH/by-name

@@ -41,12 +41,16 @@ if [[ -n "${BOARD_VENDORIMAGE_PARTITION_SIZE:-}" && ! "${BOARD_VENDORIMAGE_PARTI
   exit 1
 fi
 
-if [[ -z "${EMMC_ADDR:-}" ]]; then
-  echo "Error: $CONFIG_FILE must set EMMC_ADDR."
+if [[ -z "${EMMC_DEVICE_PATH:-}" ]]; then
+  echo "Error: $CONFIG_FILE must set EMMC_DEVICE_PATH."
   exit 1
 fi
-if [[ -z "${MICROSD_ADDR:-}" ]]; then
-  echo "Error: $CONFIG_FILE must set MICROSD_ADDR."
+if [[ -z "${MICROSD_DEVICE_PATH:-}" ]]; then
+  echo "Error: $CONFIG_FILE must set MICROSD_DEVICE_PATH."
+  exit 1
+fi
+if [[ -z "${FSTAB_EMMC_BY_NAME_PATH:-}" ]]; then
+  echo "Error: $CONFIG_FILE must set FSTAB_EMMC_BY_NAME_PATH."
   exit 1
 fi
 
@@ -75,8 +79,8 @@ ln -sf ../config/$1 work/config
 
 echo "Compiling fstab-microsd.dtbo..."
 cp "$FSTAB_TEMPLATE" patch/fstab-microsd.dtso
-sed -i "s/\[EMMC_ADDR\]/$EMMC_ADDR/g" patch/fstab-microsd.dtso
-sed -i "s/\[MICROSD_ADDR\]/$MICROSD_ADDR/g" patch/fstab-microsd.dtso
+sed -i "s|\[EMMC_DEVICE_PATH\]|$EMMC_DEVICE_PATH|g" patch/fstab-microsd.dtso
+sed -i "s|\[MICROSD_DEVICE_PATH\]|$MICROSD_DEVICE_PATH|g" patch/fstab-microsd.dtso
 dtc -@ -I dts -O dtb -o patch/fstab-microsd.dtbo patch/fstab-microsd.dtso
 
 echo "Environment ready."

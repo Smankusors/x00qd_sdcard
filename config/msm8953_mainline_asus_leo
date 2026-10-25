@@ -1,3 +1,4 @@
+source config/msm8953_mainline
 source config/msm8953_asus_libra
 
 select_dtb() {

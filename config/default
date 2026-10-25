@@ -1,5 +1,6 @@
 BOARD_BOOTIMAGE_PARTITION_SIZE=67108864   #  64 MB
 BOARD_CACHEIMAGE_PARTITION_SIZE=134217728 # 128 MB
+FSTAB_EMMC_BY_NAME_PATH=/dev/block/bootdevice/by-name
 
 select_dtb() {
   # if the directory contains many dtb, select first one

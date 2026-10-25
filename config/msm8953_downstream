@@ -1,0 +1,4 @@
+source config/default
+
+EMMC_DEVICE_PATH=/dev/block/platform/soc/7824900.sdhci
+MICROSD_DEVICE_PATH=/dev/block/platform/soc/7864900.sdhci

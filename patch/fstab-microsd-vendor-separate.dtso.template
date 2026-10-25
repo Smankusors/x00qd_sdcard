@@ -10,19 +10,19 @@
 
 				vendor {
 					compatible = "android,vendor";
-					dev = "/dev/block/platform/soc/[EMMC_ADDR]/../[MICROSD_ADDR]/by-name/microsd_vendor";
+					dev = "[MICROSD_DEVICE_PATH]/by-name/microsd_vendor";
 					status = "ok";
 				};
 
 				system {
 					compatible = "android,system";
-					dev = "/dev/block/platform/soc/[EMMC_ADDR]/../[MICROSD_ADDR]/by-name/microsd_system";
+					dev = "[MICROSD_DEVICE_PATH]/by-name/microsd_system";
 					status = "ok";
 				};
 
 				cache {
 					compatible = "android,cache";
-					dev = "/dev/block/platform/soc/[EMMC_ADDR]/by-name/cache";
+					dev = "[EMMC_DEVICE_PATH]/by-name/cache";
 					type = "ext4";
 					mnt_point = "/internalcachesothatwecanbootfromsdcard";
 					mnt_flags = "ro";
