@@ -46,11 +46,9 @@ dtb_has_fstab_nodes() {
 
   for name in "${nodes[@]}"; do
     node="/firmware/android/fstab/$name"
-    for property in type mnt_point; do
-      if ! fdtget -t s "$dtb" "$node" "$property" >/dev/null 2>&1; then
-        return 1
-      fi
-    done
+    if ! fdtget -t s "$dtb" "$node" type >/dev/null 2>&1; then
+      return 1
+    fi
   done
 
   return 0
