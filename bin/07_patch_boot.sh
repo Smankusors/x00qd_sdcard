@@ -1,11 +1,6 @@
 #!/bin/bash
 set -e
 
-if (($#)); then
-  echo "Usage: $0" >&2
-  exit 1
-fi
-
 source work/config
 source bin/lib/dtb_fstab.sh
 source bin/lib/vendor_fstab.sh

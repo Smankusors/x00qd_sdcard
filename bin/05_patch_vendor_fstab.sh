@@ -11,11 +11,6 @@ source bin/lib/vendor_image.sh
 source bin/lib/boot_image.sh
 source bin/lib/vendor_fstab.sh
 
-if (($#)); then
-  echo "Usage: $0" >&2
-  exit 1
-fi
-
 trap cleanup_vendor_image EXIT
 mount_vendor_image
 

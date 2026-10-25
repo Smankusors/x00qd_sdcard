@@ -6,11 +6,6 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-if (($#)); then
-  echo "Usage: $0" >&2
-  exit 1
-fi
-
 source work/config
 source bin/lib/vendor_image.sh
 source bin/lib/boot_image.sh
