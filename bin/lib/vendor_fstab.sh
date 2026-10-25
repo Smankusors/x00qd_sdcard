@@ -1,11 +1,33 @@
 replace_fstab_device_paths() {
   local fstab="$1"
+  local original_fstab_snapshot
+  local cmp_status
 
-  sed -i "/$MICROSD_ADDR/d" "$fstab"
-  sed -i "s/\/dev\/block\/bootdevice\/by-name\/userdata/\/dev\/block\/platform\/soc\/$MICROSD_ADDR\/by-name\/microsd_userdata/g" "$fstab"
-  sed -i "s/\/dev\/block\/bootdevice\/by-name\/cache/\/dev\/block\/platform\/soc\/$MICROSD_ADDR\/by-name\/microsd_cache/g" "$fstab"
-  sed -i "s/\/dev\/block\/bootdevice\/by-name\/system/\/dev\/block\/platform\/soc\/$MICROSD_ADDR\/by-name\/microsd_system/g" "$fstab"
-  sed -i "s/\/dev\/block\/bootdevice\/by-name\/vendor/\/dev\/block\/platform\/soc\/$MICROSD_ADDR\/by-name\/microsd_vendor/g" "$fstab"
+  original_fstab_snapshot="$(mktemp)"
+  if ! cp -- "$fstab" "$original_fstab_snapshot"; then
+    rm -f -- "$original_fstab_snapshot"
+    return 1
+  fi
+
+  if ! sed -i "/$MICROSD_ADDR/d" "$fstab" ||
+    ! sed -i "s/\/dev\/block\/bootdevice\/by-name\/userdata/\/dev\/block\/platform\/soc\/$MICROSD_ADDR\/by-name\/microsd_userdata/g" "$fstab" ||
+    ! sed -i "s/\/dev\/block\/bootdevice\/by-name\/cache/\/dev\/block\/platform\/soc\/$MICROSD_ADDR\/by-name\/microsd_cache/g" "$fstab" ||
+    ! sed -i "s/\/dev\/block\/bootdevice\/by-name\/system/\/dev\/block\/platform\/soc\/$MICROSD_ADDR\/by-name\/microsd_system/g" "$fstab" ||
+    ! sed -i "s/\/dev\/block\/bootdevice\/by-name\/vendor/\/dev\/block\/platform\/soc\/$MICROSD_ADDR\/by-name\/microsd_vendor/g" "$fstab"; then
+    rm -f -- "$original_fstab_snapshot"
+    return 1
+  fi
+
+  if cmp -s -- "$original_fstab_snapshot" "$fstab"; then
+    echo "Warning: fstab was unchanged after patching: $fstab" >&2
+  else
+    cmp_status=$?
+    if [[ "$cmp_status" -ne 1 ]]; then
+      rm -f -- "$original_fstab_snapshot"
+      return 1
+    fi
+  fi
+  rm -f -- "$original_fstab_snapshot"
 }
 
 find_ramdisk_fstab_files() {
