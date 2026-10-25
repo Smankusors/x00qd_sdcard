@@ -1,14 +1,14 @@
 #!/bin/bash
 set -e
 
-if [[ "$1" == "--rw" ]]; then
-  SET_MOUNT_RW=1
-else
-  SET_MOUNT_RW=0
+if (($#)); then
+  echo "Usage: $0" >&2
+  exit 1
 fi
 
 source work/config
 source bin/lib/dtb_fstab.sh
+source bin/lib/vendor_fstab.sh
 
 BOOT_IMAGE_DIR=Android_boot_image_editor/build/unzip_boot
 BOOT_JSON="$BOOT_IMAGE_DIR/boot.json"
@@ -27,17 +27,17 @@ if [[ ${#DTBFILES[@]} -eq 0 ]]; then
   exit 1
 fi
 
-echo "Patching device trees..."
-for file in "${DTBFILES[@]}"; do
-  if [[ "$SET_MOUNT_RW" -eq 1 ]]; then
-    if [[ "$VENDOR_LAYOUT" == "separate" ]]; then
-      set_dtb_mount_rw "$file" system vendor
-    else
-      set_dtb_mount_rw "$file" system
-    fi
-  fi
-  fdtoverlay -i "$file" -o "$file" patch/fstab-microsd.dtbo
-done
+if ! BOOT_DTB="$(select_dtb "$TMPDIR/out")" || [[ ! -f "$BOOT_DTB" ]]; then
+  echo "Error: unable to select a device tree blob from $TMPDIR/out for this board." >&2
+  exit 1
+fi
+
+echo "Patching selected device tree..."
+if dtb_has_fstab_nodes "$BOOT_DTB" "$VENDOR_LAYOUT"; then
+  fdtoverlay -i "$BOOT_DTB" -o "$BOOT_DTB" patch/fstab-microsd.dtbo
+else
+  echo "No compatible fstab entries for VENDOR_LAYOUT=$VENDOR_LAYOUT in $BOOT_DTB; using the ramdisk fstab."
+fi
 
 echo "Concatenating device trees..."
 cat "${DTBFILES[@]}" > "$TMPDIR/dtb"
@@ -57,10 +57,6 @@ BOOT_KERNEL_OFFSET=$(getBootImageJSONValue '.kernel.loadOffset')
 BOOT_RAMDISK_OFFSET=$(getBootImageJSONValue '.ramdisk.loadOffset')
 BOOT_TAGS_OFFSET=$(getBootImageJSONValue '.info.tagsOffset')
 BOOT_PAGESIZE=$(getBootImageJSONValue '.info.pageSize')
-if ! BOOT_DTB="$(select_dtb "$TMPDIR/out")" || [[ ! -f "$BOOT_DTB" ]]; then
-  echo "Error: unable to select a device tree blob from $TMPDIR/out for this board." >&2
-  exit 1
-fi
 BOOT_OS_VERSION=$(getBootImageJSONValue '.info.osVersion')
 BOOT_OS_PATCH_LEVEL=$(getBootImageJSONValue '.info.osPatchLevel')
 

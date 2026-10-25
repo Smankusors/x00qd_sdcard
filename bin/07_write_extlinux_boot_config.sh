@@ -9,25 +9,20 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 # Check if a device was provided as an argument
-if [[ -z "$1" ]]; then
-  echo "Usage: $0 /dev/sdX [--rw]"
+if (($# != 1)); then
+  echo "Usage: $0 /dev/sdX"
   exit 1
 fi
 
 source work/config
 source bin/lib/dtb_fstab.sh
+source bin/lib/vendor_fstab.sh
 
 DEVICE="$1"
 
 if [[ ! -b "$DEVICE" ]]; then
   echo "Error: $DEVICE is not a valid block device."
   exit 1
-fi
-
-if [[ "$2" == "--rw" ]]; then
-  SET_MOUNT_RW=1
-else
-  SET_MOUNT_RW=0
 fi
 
 BOOTMOUNTDIR="$(mktemp -d)"
@@ -47,9 +42,8 @@ echo "Writing extlinux configuration..."
 cp patch/extlinux.conf.template "$EXTLINUX_CONF"
 python3 bin/render_extlinux_config.py "$BOOT_JSON" "$EXTLINUX_CONF"
 
-echo "Copying kernel and ramdisk..."
+echo "Copying kernel..."
 cp "$BOOT_IMAGE_DIR/kernel" "$BOOTMOUNTDIR/kernel"
-cp "$BOOT_IMAGE_DIR/ramdisk.img.gz" "$BOOTMOUNTDIR/ramdisk.img.gz"
 
 echo "Extracting and copying device tree blob..."
 TEMPDTBDIR="$(mktemp -d)"
@@ -77,14 +71,18 @@ if [[ -z "$DTBFILE" || ! -f "$DTBFILE" ]]; then
   exit 1
 fi
 echo "Using DTB file: $DTBFILE"
-if [[ "$SET_MOUNT_RW" -eq 1 ]]; then
-  if [[ "$VENDOR_LAYOUT" == "separate" ]]; then
-    set_dtb_mount_rw "$DTBFILE" system vendor
-  else
-    set_dtb_mount_rw "$DTBFILE" system
-  fi
+if dtb_has_fstab_nodes "$DTBFILE" "$VENDOR_LAYOUT"; then
+  fdtoverlay -i "$DTBFILE" -o "$TEMPDTBDIR/patched.dtb" patch/fstab-microsd.dtbo
+  DTB_TO_COPY="$TEMPDTBDIR/patched.dtb"
+else
+  echo "No compatible fstab entries for VENDOR_LAYOUT=$VENDOR_LAYOUT in the selected DTB; using the ramdisk fstab."
+  DTB_TO_COPY="$DTBFILE"
 fi
-fdtoverlay -i "$DTBFILE" -o "$BOOTMOUNTDIR/dtb" patch/fstab-microsd.dtbo
+
+cp "$DTB_TO_COPY" "$BOOTMOUNTDIR/dtb"
+
+echo "Copying ramdisk..."
+cp "$BOOT_IMAGE_DIR/ramdisk.img.gz" "$BOOTMOUNTDIR/ramdisk.img.gz"
 
 echo "Syncing and cleaning up..."
 sync

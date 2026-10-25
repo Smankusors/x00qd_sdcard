@@ -32,3 +32,26 @@ set_dtb_mount_rw() {
     echo "$node: type=$fs_type mnt_flags=$updated_flags"
   done
 }
+
+dtb_has_fstab_nodes() {
+  local dtb="$1"
+  local vendor_layout="$2"
+  local name node property
+  local -a nodes
+
+  nodes=(system)
+  if [[ "$vendor_layout" == "separate" ]]; then
+    nodes+=(vendor)
+  fi
+
+  for name in "${nodes[@]}"; do
+    node="/firmware/android/fstab/$name"
+    for property in type mnt_point; do
+      if ! fdtget -t s "$dtb" "$node" "$property" >/dev/null 2>&1; then
+        return 1
+      fi
+    done
+  done
+
+  return 0
+}

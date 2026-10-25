@@ -14,13 +14,13 @@
   - [4. Patch vendor file contexts](#4-patch-vendor-file-contexts)
   - [5. Patch vendor fstab](#5-patch-vendor-fstab)
   - [6. Patch debug logs (optional)](#6-patch-debug-logs-optional)
+    - [Debugging Early Android Boot Issues](#debugging-early-android-boot-issues)
   - [7. Patch boot.img or write extlinux boot config](#7-patch-bootimg-or-write-extlinux-boot-config)
     - [Patch boot.img (stock bootloader)](#patch-bootimg-stock-bootloader)
     - [Or write extlinux config (U-Boot or other bootloaders)](#or-write-extlinux-config-u-boot-or-other-bootloaders)
   - [8. Write system and vendor images to sdcard](#8-write-system-and-vendor-images-to-sdcard)
   - [9. Flash modified boot.img to the phone](#9-flash-modified-bootimg-to-the-phone)
 - [U-Boot Bootloader](#u-boot-bootloader)
-- [Debugging Early Android Boot Issues](#debugging-early-android-boot-issues)
 - [Acknowledgements](#acknowledgements)
 
 ## Disclaimer
@@ -125,11 +125,18 @@ Run the following command, replacing /dev/sdX with your microSD card's device pa
 
 ### 6. Patch debug logs (optional)
 
-If you want early-boot logs, run this before step 7. Run step 7 with `--rw` so the logs can be written to the microSD:
+Run this before step 7 to enable early-boot log collection on the microSD card:
 
 ```
 ./runInDocker.sh 06_patch_debug_logs.sh
 ```
+
+#### Debugging Early Android Boot Issues
+
+Early-boot logs are saved to `/vendor/dmesg.txt` and `/vendor/logcat.txt` on the microSD card. If this step reports that the ROM is unsupported, early-boot logging cannot be enabled with this setup.
+
+> [!IMPORTANT]
+> Log collection only works if Android reaches the **early init** phase. If no logs appear, startup may be failing earlier.
 
 ### 7. Patch boot.img or write extlinux boot config
 
@@ -189,32 +196,6 @@ To get U-Boot to automatically boot Android from the microSD, we can replace ste
 ```
 ./runInDocker.sh 07_write_extlinux_boot_config.sh /dev/sdX
 ```
-
-## Debugging Early Android Boot Issues
-
-Run the optional log patch in step 6 before step 7. It supports split-policy ROMs with `vendor_sepolicy.cil` and legacy monolithic-policy ROMs with a compiled `/sepolicy` in the boot ramdisk. The monolithic path uses `sepolicy-inject`, which is included when you rebuild the Docker image.
-
-The ROM must include the `su` SELinux domain and the policy types used by the logging rules. If the monolithic policy format or types are unsupported, the patch command stops with an error before replacing the policy.
-
-Then choose one boot method:
-
-```
-./runInDocker.sh 07_patch_boot.sh --rw
-```
-
-Or:
-
-```
-./runInDocker.sh 07_write_extlinux_boot_config.sh /dev/sdX --rw
-```
-
-It writes kernel logs and logcat to `/vendor/dmesg.txt` and `/vendor/logcat.txt` on microSD.
-
-> [!IMPORTANT]
-> This will only work if the Android reaches **early init** phase. If no logs appear, probably the failure occurs before that stage.
-
-> [!NOTE]
-> Unfortunately, this doesn't work with the stock ROM yet.
 
 ## Acknowledgements
 

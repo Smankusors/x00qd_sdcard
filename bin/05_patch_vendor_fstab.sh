@@ -8,6 +8,8 @@ fi
 
 source work/config
 source bin/lib/vendor_image.sh
+source bin/lib/boot_image.sh
+source bin/lib/vendor_fstab.sh
 
 if (($#)); then
   echo "Usage: $0" >&2
@@ -29,12 +31,17 @@ if [[ ! -f "$FSTABQCOMFILE" ]]; then
 fi
 cp -- "$FSTABQCOMFILE" "$FSTABQCOMFILE.bak"
 chcon --reference="$FSTABQCOMFILE" "$FSTABQCOMFILE.bak"
-sed -i "/$MICROSD_ADDR/d" "$FSTABQCOMFILE"
-sed -i "s/\/dev\/block\/bootdevice\/by-name\/userdata/\/dev\/block\/platform\/soc\/$MICROSD_ADDR\/by-name\/microsd_userdata/g" "$FSTABQCOMFILE"
-sed -i "s/\/dev\/block\/bootdevice\/by-name\/cache/\/dev\/block\/platform\/soc\/$MICROSD_ADDR\/by-name\/microsd_cache/g" "$FSTABQCOMFILE"
-sed -i "s/\/dev\/block\/bootdevice\/by-name\/system/\/dev\/block\/platform\/soc\/$MICROSD_ADDR\/by-name\/microsd_system/g" "$FSTABQCOMFILE"
-sed -i "s/\/dev\/block\/bootdevice\/by-name\/vendor/\/dev\/block\/platform\/soc\/$MICROSD_ADDR\/by-name\/microsd_vendor/g" "$FSTABQCOMFILE"
+replace_fstab_device_paths "$FSTABQCOMFILE"
 chcon --reference="$FSTABQCOMFILE.bak" "$FSTABQCOMFILE"
 rm "$FSTABQCOMFILE.bak"
+
+RAMDISK_ROOT="Android_boot_image_editor/build/unzip_boot/root"
+mapfile -d '' RAMDISK_FSTAB_FILES < <(find_ramdisk_fstab_files "$RAMDISK_ROOT")
+for fstab in "${RAMDISK_FSTAB_FILES[@]}"; do
+  replace_fstab_device_paths "$fstab"
+done
+if ((${#RAMDISK_FSTAB_FILES[@]})); then
+  repack_boot_image
+fi
 
 echo "Done."

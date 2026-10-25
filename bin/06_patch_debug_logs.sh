@@ -14,8 +14,11 @@ fi
 source work/config
 source bin/lib/vendor_image.sh
 source bin/lib/boot_image.sh
+source bin/lib/dtb_fstab.sh
+source bin/lib/vendor_fstab.sh
 RAMDISK_ROOT="Android_boot_image_editor/build/unzip_boot/root"
 POLICY_TEMP=""
+BOOT_IMAGE_REPACK_REQUIRED=0
 cleanup() {
   if [[ -n "$POLICY_TEMP" ]]; then
     rm -f -- "$POLICY_TEMP"
@@ -121,7 +124,7 @@ if [[ -n "$VENDOR_SEPOLICY_CIL" ]]; then
   cat -- patch/log_from_init.cil >> "$VENDOR_SEPOLICY_CIL"
   rm -f -- "$VENDOR_ROOT/etc/selinux/precompiled_sepolicy"
   if [[ "$INIT_RC_IN_RAMDISK" -eq 1 ]]; then
-    repack_boot_image
+    BOOT_IMAGE_REPACK_REQUIRED=1
   fi
 else
   MONOLITHIC_POLICY="$RAMDISK_ROOT/sepolicy"
@@ -154,6 +157,30 @@ else
   patch_init_config
   mv -- "$POLICY_TEMP" "$MONOLITHIC_POLICY"
   POLICY_TEMP=""
+  BOOT_IMAGE_REPACK_REQUIRED=1
+fi
+
+if set_boot_image_mount_rw "Android_boot_image_editor/build/unzip_boot" "$VENDOR_LAYOUT"; then
+  BOOT_IMAGE_REPACK_REQUIRED=1
+else
+  case $? in
+    1) ;;
+    *)
+      exit 1
+      ;;
+  esac
+fi
+
+RAMDISK_FSTAB_CHANGED=0
+mapfile -d '' RAMDISK_FSTAB_FILES < <(find_ramdisk_fstab_files "$RAMDISK_ROOT")
+for fstab in "${RAMDISK_FSTAB_FILES[@]}"; do
+  set_fstab_mount_rw "$fstab" "$VENDOR_LAYOUT"
+done
+if [[ "$RAMDISK_FSTAB_CHANGED" -eq 1 ]]; then
+  BOOT_IMAGE_REPACK_REQUIRED=1
+fi
+
+if [[ "$BOOT_IMAGE_REPACK_REQUIRED" -eq 1 ]]; then
   repack_boot_image
 fi
 
