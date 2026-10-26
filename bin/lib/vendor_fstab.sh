@@ -43,7 +43,7 @@ set_fstab_mount_rw_entry() {
   local partition="$2"
 
   sed -E -i \
-    -e "/\\/by-name\\/microsd_${partition}(_[ab])?[[:space:]]+\\/${partition}[[:space:]]/s/(^|,)ro(,|[[:space:]]|\$)/\\1rw\\2/g" \
+    -e "/\\/by-name\\/microsd_${partition}(_[ab])?[[:space:]]+\\/${partition}[[:space:]]/s/([[:space:]]|,)ro(,|[[:space:]]|\$)/\\1rw\\2/g" \
     "$fstab"
 }
 
