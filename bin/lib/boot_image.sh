@@ -1,7 +1,21 @@
 repack_boot_image() {
+  local boot_image_editor="Android_boot_image_editor"
+  local packed_boot_image
+
   echo "Repacking boot.img..."
-  cp work/boot.img Android_boot_image_editor/boot.img
-  ./Android_boot_image_editor/gradlew -p Android_boot_image_editor pack
+  cp work/boot.img "$boot_image_editor/boot.img"
+  (
+    cd "$boot_image_editor"
+    ./gradlew pack
+  )
+
+  packed_boot_image="$boot_image_editor/boot.img.signed"
+  if [[ ! -f "$packed_boot_image" ]]; then
+    echo "Error: Android_boot_image_editor did not produce $packed_boot_image." >&2
+    return 1
+  fi
+
+  cp -- "$packed_boot_image" work/boot.img
 }
 
 # Returns 0 when a compatible DTB fstab was patched, 1 when none was found, 2 on error.
