@@ -70,6 +70,5 @@ set_fstab_mount_rw() {
     rm -f -- "$tmpfile"
     return 1
   fi
-  RAMDISK_FSTAB_CHANGED=1
   rm -f -- "$tmpfile"
 }

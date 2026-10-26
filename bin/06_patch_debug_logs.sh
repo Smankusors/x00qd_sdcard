@@ -13,7 +13,6 @@ source bin/lib/dtb_fstab.sh
 source bin/lib/vendor_fstab.sh
 RAMDISK_ROOT="Android_boot_image_editor/build/unzip_boot/root"
 POLICY_TEMP=""
-BOOT_IMAGE_REPACK_REQUIRED=0
 cleanup() {
   if [[ -n "$POLICY_TEMP" ]]; then
     rm -f -- "$POLICY_TEMP"
@@ -23,6 +22,12 @@ cleanup() {
 trap cleanup EXIT
 mount_vendor_image
 
+VENDOR_FSTAB_FILE="$(find_vendor_path etc/fstab.qcom || true)"
+if [[ -n "$VENDOR_FSTAB_FILE" && ! -f "$VENDOR_FSTAB_FILE" ]]; then
+  echo "Error: expected fstab.qcom to be a file, but found a directory: $VENDOR_FSTAB_FILE." >&2
+  exit 1
+fi
+
 INIT_QCOM_RC_PATH="etc/init/hw/init.qcom.rc"
 VENDOR_SEPOLICY_CIL="$(find_vendor_path etc/selinux/vendor_sepolicy.cil || true)"
 if [[ -n "$VENDOR_SEPOLICY_CIL" && ! -f "$VENDOR_SEPOLICY_CIL" ]]; then
@@ -30,7 +35,6 @@ if [[ -n "$VENDOR_SEPOLICY_CIL" && ! -f "$VENDOR_SEPOLICY_CIL" ]]; then
   exit 1
 fi
 INIT_RC_IN_VENDOR_INIT=0
-INIT_RC_IN_RAMDISK=0
 VENDOR_INIT_DIR=""
 VENDOR_INIT_METADATA_TEMPLATE=""
 
@@ -76,7 +80,6 @@ if [[ -z "$INIT_RC_FILE" ]]; then
     "$RAMDISK_ROOT/vendor/etc/init/hw/init.qcom.rc"; do
     if [[ -f "$candidate" && ! -L "$candidate" ]]; then
       INIT_RC_FILE="$candidate"
-      INIT_RC_IN_RAMDISK=1
       break
     fi
   done
@@ -118,9 +121,6 @@ if [[ -n "$VENDOR_SEPOLICY_CIL" ]]; then
   echo "Patching split vendor sepolicy..."
   cat -- patch/log_from_init.cil >> "$VENDOR_SEPOLICY_CIL"
   rm -f -- "$VENDOR_ROOT/etc/selinux/precompiled_sepolicy"
-  if [[ "$INIT_RC_IN_RAMDISK" -eq 1 ]]; then
-    BOOT_IMAGE_REPACK_REQUIRED=1
-  fi
 else
   MONOLITHIC_POLICY="$RAMDISK_ROOT/sepolicy"
   if [[ ! -f "$MONOLITHIC_POLICY" || -L "$MONOLITHIC_POLICY" ]]; then
@@ -152,11 +152,10 @@ else
   patch_init_config
   mv -- "$POLICY_TEMP" "$MONOLITHIC_POLICY"
   POLICY_TEMP=""
-  BOOT_IMAGE_REPACK_REQUIRED=1
 fi
 
 if set_boot_image_mount_rw "Android_boot_image_editor/build/unzip_boot" "$VENDOR_LAYOUT"; then
-  BOOT_IMAGE_REPACK_REQUIRED=1
+  :
 else
   case $? in
     1) ;;
@@ -166,17 +165,15 @@ else
   esac
 fi
 
-RAMDISK_FSTAB_CHANGED=0
+if [[ -n "$VENDOR_FSTAB_FILE" ]]; then
+  echo "Patching vendor fstab mount options: $VENDOR_FSTAB_FILE"
+  set_fstab_mount_rw "$VENDOR_FSTAB_FILE" "$VENDOR_LAYOUT"
+fi
 mapfile -d '' RAMDISK_FSTAB_FILES < <(find_ramdisk_fstab_files "$RAMDISK_ROOT")
 for fstab in "${RAMDISK_FSTAB_FILES[@]}"; do
   set_fstab_mount_rw "$fstab" "$VENDOR_LAYOUT"
 done
-if [[ "$RAMDISK_FSTAB_CHANGED" -eq 1 ]]; then
-  BOOT_IMAGE_REPACK_REQUIRED=1
-fi
 
-if [[ "$BOOT_IMAGE_REPACK_REQUIRED" -eq 1 ]]; then
-  repack_boot_image
-fi
+repack_boot_image
 
 echo "Done."
