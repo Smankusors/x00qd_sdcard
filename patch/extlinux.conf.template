@@ -5,6 +5,6 @@ PROMPT 1
 LABEL android
         MENU LABEL Android Boot
         LINUX /kernel
-        INITRD /ramdisk.img.gz
+        INITRD /[RAMDISK]
         FDT /dtb
         APPEND [CMDLINE]

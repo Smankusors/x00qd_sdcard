@@ -25,6 +25,11 @@ if [[ ! -b "$DEVICE" ]]; then
   exit 1
 fi
 
+BOOT_IMAGE_DIR=Android_boot_image_editor/build/unzip_boot
+BOOT_JSON="$BOOT_IMAGE_DIR/boot.json"
+RAMDISK_FILE="$(jq -r '.ramdisk.file' "$BOOT_JSON")"
+RAMDISK_NAME="${RAMDISK_FILE##*/}"
+
 BOOTMOUNTDIR="$(mktemp -d)"
 echo "BOOTMOUNTDIR=$BOOTMOUNTDIR"
 
@@ -35,12 +40,10 @@ echo "Setting up folder structure..."
 mkdir -p "$BOOTMOUNTDIR"
 mkdir -p "$BOOTMOUNTDIR/extlinux"
 
-BOOT_IMAGE_DIR=Android_boot_image_editor/build/unzip_boot
-BOOT_JSON="$BOOT_IMAGE_DIR/boot.json"
 EXTLINUX_CONF="$BOOTMOUNTDIR/extlinux/extlinux.conf"
 echo "Writing extlinux configuration..."
 cp patch/extlinux.conf.template "$EXTLINUX_CONF"
-python3 bin/render_extlinux_config.py "$BOOT_JSON" "$EXTLINUX_CONF"
+python3 bin/render_extlinux_config.py "$BOOT_JSON" "$EXTLINUX_CONF" --ramdisk-name "$RAMDISK_NAME"
 
 echo "Copying kernel..."
 cp "$BOOT_IMAGE_DIR/kernel" "$BOOTMOUNTDIR/kernel"
@@ -82,7 +85,7 @@ fi
 cp "$DTB_TO_COPY" "$BOOTMOUNTDIR/dtb"
 
 echo "Copying ramdisk..."
-cp "$BOOT_IMAGE_DIR/ramdisk.img.gz" "$BOOTMOUNTDIR/ramdisk.img.gz"
+cp -- "$BOOT_IMAGE_DIR/$RAMDISK_NAME" "$BOOTMOUNTDIR/$RAMDISK_NAME"
 
 echo "Syncing and cleaning up..."
 sync

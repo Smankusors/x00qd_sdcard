@@ -9,6 +9,7 @@ from pathlib import Path
 class Arguments(argparse.Namespace):
     boot_json: Path
     extlinux_config: Path
+    ramdisk_name: str
 
 
 def single_line_cmdline(value: object) -> str:
@@ -30,6 +31,7 @@ def parse_args() -> Arguments:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("boot_json", type=Path)
     parser.add_argument("extlinux_config", type=Path)
+    parser.add_argument("--ramdisk-name", required=True)
 
     args = Arguments()
     parser.parse_args(namespace=args)
@@ -46,6 +48,7 @@ def main() -> None:
     cmdline = single_line_cmdline(info.get("cmdline") if isinstance(info, dict) else None)
 
     config = args.extlinux_config.read_text(encoding="utf-8")
+    config = replace_placeholder(config, "[RAMDISK]", args.ramdisk_name)
     config = replace_placeholder(config, "[CMDLINE]", cmdline)
     args.extlinux_config.write_text(config, encoding="utf-8")
     print(f"CMDLINE={cmdline!r}")
