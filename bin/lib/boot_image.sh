@@ -18,19 +18,15 @@ repack_boot_image() {
   cp -- "$packed_boot_image" work/boot.img
 }
 
-# Returns 0 when a compatible DTB fstab was patched, 1 when none was found, 2 on error.
+# Returns 0 when the system DTB fstab was patched (and vendor when separate),
+# 1 when none was found, or 2 on error.
 set_boot_image_mount_rw() {
   local boot_image_dir="$1"
   local vendor_layout="$2"
   local kernel="$boot_image_dir/kernel"
   local dtb_source="$boot_image_dir/dtb"
   local tmpdir dtb dtb_fstab_found=0
-  local -a dtbfiles nodes
-
-  nodes=(system)
-  if [[ "$vendor_layout" == "separate" ]]; then
-    nodes+=(vendor)
-  fi
+  local -a dtbfiles dtb_nodes
 
   if [[ -f "$kernel" ]]; then
     tmpdir="$(mktemp -d)"
@@ -43,8 +39,17 @@ set_boot_image_mount_rw() {
     dtbfiles=("$tmpdir"/*.dtb)
     shopt -u nullglob
     for dtb in "${dtbfiles[@]}"; do
-      if dtb_has_fstab_nodes "$dtb" "$vendor_layout"; then
-        set_dtb_mount_rw "$dtb" "${nodes[@]}" || {
+      if fdtget -t s "$dtb" /firmware/android/fstab/system type >/dev/null 2>&1; then
+        remove_dtb_fsmgr_flag "$dtb" system verify || {
+          rm -rf -- "$tmpdir"
+          return 2
+        }
+        dtb_nodes=(system)
+        if [[ "$vendor_layout" == "separate" ]] &&
+          fdtget -t s "$dtb" /firmware/android/fstab/vendor type >/dev/null 2>&1; then
+          dtb_nodes+=(vendor)
+        fi
+        set_dtb_mount_rw "$dtb" "${dtb_nodes[@]}" || {
           rm -rf -- "$tmpdir"
           return 2
         }
@@ -69,8 +74,17 @@ set_boot_image_mount_rw() {
     fi
 
     if dtb="$(select_dtb "$tmpdir")" && [[ -f "$dtb" ]] &&
-      dtb_has_fstab_nodes "$dtb" "$vendor_layout"; then
-      set_dtb_mount_rw "$dtb" "${nodes[@]}" || {
+      fdtget -t s "$dtb" /firmware/android/fstab/system type >/dev/null 2>&1; then
+      remove_dtb_fsmgr_flag "$dtb" system verify || {
+        rm -rf -- "$tmpdir"
+        return 2
+      }
+      dtb_nodes=(system)
+      if [[ "$vendor_layout" == "separate" ]] &&
+        fdtget -t s "$dtb" /firmware/android/fstab/vendor type >/dev/null 2>&1; then
+        dtb_nodes+=(vendor)
+      fi
+      set_dtb_mount_rw "$dtb" "${dtb_nodes[@]}" || {
         rm -rf -- "$tmpdir"
         return 2
       }

@@ -1,3 +1,42 @@
+remove_dtb_fsmgr_flag() {
+  local dtb="$1"
+  local name="$2"
+  local wanted_flag="$3"
+  local node="/firmware/android/fstab/$name"
+  local flags flag updated_flags=""
+  local changed=0
+  local -a flag_list
+
+  if ! flags="$(fdtget -t s "$dtb" "$node" fsmgr_flags 2>/dev/null)"; then
+    return 0
+  fi
+
+  IFS=',' read -r -a flag_list <<< "$flags"
+  for flag in "${flag_list[@]}"; do
+    flag="${flag//[[:space:]]/}"
+    if [[ "$flag" == "$wanted_flag" ]]; then
+      changed=1
+      continue
+    fi
+    if [[ -n "$flag" ]]; then
+      if [[ -n "$updated_flags" ]]; then
+        updated_flags="${updated_flags},"
+      fi
+      updated_flags+="$flag"
+    fi
+  done
+
+  if [[ "$changed" -eq 0 ]]; then
+    return 0
+  fi
+  if [[ -n "$updated_flags" ]]; then
+    fdtput -t s "$dtb" "$node" fsmgr_flags "$updated_flags"
+  else
+    fdtput -d "$dtb" "$node" fsmgr_flags
+  fi
+  echo "Removed fsmgr flag '$wanted_flag' from $node in $dtb."
+}
+
 set_dtb_mount_rw() {
   local dtb="$1"
   shift

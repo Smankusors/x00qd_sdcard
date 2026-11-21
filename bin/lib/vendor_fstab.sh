@@ -47,6 +47,42 @@ set_fstab_mount_rw_entry() {
     "$fstab"
 }
 
+remove_fstab_fsmgr_flag() {
+  local fstab="$1"
+  local mount_point="$2"
+  local wanted_flag="$3"
+  local tmpfile
+
+  tmpfile="$(mktemp)"
+  if ! awk -v mount_point="$mount_point" -v wanted_flag="$wanted_flag" '
+    $2 == mount_point && NF >= 5 {
+      count = split($5, flags, ",")
+      updated_flags = ""
+      changed = 0
+      for (i = 1; i <= count; i++) {
+        if (flags[i] == wanted_flag) {
+          changed = 1
+          continue
+        }
+        updated_flags = updated_flags (updated_flags == "" ? "" : ",") flags[i]
+      }
+      if (changed) {
+        $5 = (updated_flags == "" ? "-" : updated_flags)
+      }
+    }
+    { print }
+  ' "$fstab" > "$tmpfile"; then
+    rm -f -- "$tmpfile"
+    return 1
+  fi
+
+  if ! cat -- "$tmpfile" > "$fstab"; then
+    rm -f -- "$tmpfile"
+    return 1
+  fi
+  rm -f -- "$tmpfile"
+}
+
 set_fstab_mount_rw() {
   local fstab="$1"
   local vendor_layout="$2"
@@ -58,6 +94,10 @@ set_fstab_mount_rw() {
     return 1
   fi
   if ! set_fstab_mount_rw_entry "$tmpfile" system; then
+    rm -f -- "$tmpfile"
+    return 1
+  fi
+  if ! remove_fstab_fsmgr_flag "$tmpfile" /system verify; then
     rm -f -- "$tmpfile"
     return 1
   fi
