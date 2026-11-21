@@ -1,3 +1,37 @@
+remove_voldmanaged_sdcard_entry() {
+  local fstab="$1"
+  local tmpfile
+  local cmp_status
+
+  tmpfile="$(mktemp)"
+  if ! awk '
+    /^[[:space:]]*#/ { print; next }
+    $5 ~ /(^|,)voldmanaged=sdcard1(:[^,]*)?(,|$)/ { next }
+    { print }
+  ' "$fstab" > "$tmpfile"; then
+    rm -f -- "$tmpfile"
+    return 1
+  fi
+
+  if cmp -s -- "$fstab" "$tmpfile"; then
+    rm -f -- "$tmpfile"
+    return 0
+  else
+    cmp_status=$?
+    if [[ "$cmp_status" -ne 1 ]]; then
+      rm -f -- "$tmpfile"
+      return 1
+    fi
+  fi
+
+  if ! cat -- "$tmpfile" > "$fstab"; then
+    rm -f -- "$tmpfile"
+    return 1
+  fi
+  rm -f -- "$tmpfile"
+  echo "Removed voldmanaged=sdcard1 entry from $fstab."
+}
+
 replace_fstab_device_paths() {
   local fstab="$1"
   local original_fstab_snapshot
@@ -7,6 +41,10 @@ replace_fstab_device_paths() {
 
   original_fstab_snapshot="$(mktemp)"
   if ! cp -- "$fstab" "$original_fstab_snapshot"; then
+    rm -f -- "$original_fstab_snapshot"
+    return 1
+  fi
+  if ! remove_voldmanaged_sdcard_entry "$fstab"; then
     rm -f -- "$original_fstab_snapshot"
     return 1
   fi
