@@ -14,6 +14,7 @@ RUN apt update \
     file \
     jq \
     mkbootimg \
+    openssl \
     parted \
     python3 \
     pv \
