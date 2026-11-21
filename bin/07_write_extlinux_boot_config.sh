@@ -17,6 +17,7 @@ fi
 source work/config
 source bin/lib/dtb_fstab.sh
 source bin/lib/vendor_fstab.sh
+source bin/lib/boot_image_patch.sh
 
 DEVICE="$1"
 
@@ -26,6 +27,8 @@ if [[ ! -b "$DEVICE" ]]; then
 fi
 
 BOOT_IMAGE_DIR=Android_boot_image_editor/build/unzip_boot
+prepare_boot_image_tree "$BOOT_IMAGE_DIR" "$VENDOR_LAYOUT"
+
 BOOT_JSON="$BOOT_IMAGE_DIR/boot.json"
 RAMDISK_FILE="$(jq -r '.ramdisk.file' "$BOOT_JSON")"
 RAMDISK_NAME="${RAMDISK_FILE##*/}"
@@ -74,13 +77,7 @@ if [[ -z "$DTBFILE" || ! -f "$DTBFILE" ]]; then
   exit 1
 fi
 echo "Using DTB file: $DTBFILE"
-if dtb_has_fstab_nodes "$DTBFILE" "$VENDOR_LAYOUT"; then
-  fdtoverlay -i "$DTBFILE" -o "$TEMPDTBDIR/patched.dtb" patch/fstab-microsd.dtbo
-  DTB_TO_COPY="$TEMPDTBDIR/patched.dtb"
-else
-  echo "No compatible fstab entries for VENDOR_LAYOUT=$VENDOR_LAYOUT in the selected DTB; using the ramdisk fstab."
-  DTB_TO_COPY="$DTBFILE"
-fi
+DTB_TO_COPY="$DTBFILE"
 
 cp "$DTB_TO_COPY" "$BOOTMOUNTDIR/dtb"
 
