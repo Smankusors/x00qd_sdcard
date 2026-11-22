@@ -4,9 +4,17 @@ set -e
 if [ -z "$1" ]; then
   echo "No script name provided."
   echo
-  echo "Available scripts in the bin folder:"
+  echo "Available executable setup steps:"
 
-  ls -1 "./bin"
+  shopt -s nullglob
+  AVAILABLE_SCRIPTS=(./bin/[0-9][0-9]_*.sh)
+  shopt -u nullglob
+
+  for script in "${AVAILABLE_SCRIPTS[@]}"; do
+    if [[ -f "$script" && -x "$script" ]]; then
+      printf '  %s\n' "${script##*/}"
+    fi
+  done
 
   exit 1
 fi
