@@ -17,7 +17,7 @@ get_system_fsmgr_flags() (
   if [[ -n "$dtb_source" ]]; then
     temporary_dir="$(mktemp -d)"
     trap 'rm -rf -- "$temporary_dir"' EXIT
-    python3 extract-dtb/extract_dtb/extract_dtb.py -o "$temporary_dir" "$dtb_source"
+    python3 extract-dtb/extract_dtb/extract_dtb.py -o "$temporary_dir" "$dtb_source" >&2
 
     if selected_dtb="$(select_dtb "$temporary_dir")" && [[ -f "$selected_dtb" ]] &&
       fdtget -t s "$selected_dtb" /firmware/android/fstab/system compatible >/dev/null 2>&1; then
