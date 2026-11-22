@@ -6,7 +6,7 @@ remove_voldmanaged_sdcard_entry() {
   tmpfile="$(mktemp)"
   if ! awk '
     /^[[:space:]]*#/ { print; next }
-    $5 ~ /(^|,)voldmanaged=sdcard1(:[^,]*)?(,|$)/ { next }
+    $5 ~ /(^|,)voldmanaged=sdcard1?(:[^,]*)?(,|$)/ { next }
     { print }
   ' "$fstab" > "$tmpfile"; then
     rm -f -- "$tmpfile"
@@ -29,7 +29,7 @@ remove_voldmanaged_sdcard_entry() {
     return 1
   fi
   rm -f -- "$tmpfile"
-  echo "Removed voldmanaged=sdcard1 entry from $fstab."
+  echo "Removed voldmanaged microSD entry from $fstab."
 }
 
 replace_fstab_device_paths() {
